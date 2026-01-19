@@ -45,4 +45,4 @@ services:
         fromService:
           type: web
           name: diabetes-companion-api
-          property: url
+          property: host
