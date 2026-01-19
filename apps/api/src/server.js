@@ -6,6 +6,7 @@ import { insightsRouter } from "./routes/insights.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
+app.set("trust proxy", 1); // Trust Render's load balancer
 
 // Render sets PORT for you; local uses .env
 const PORT = process.env.PORT || 4000;
