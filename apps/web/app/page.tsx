@@ -3,6 +3,7 @@
 import Image from "next/image";
 import GlucoseForm from "../components/GlucoseForm";
 import GlucoseHistory from "../components/GlucoseHistory";
+import GlucoseChart from "../components/GlucoseChart";
 import { useState } from "react";
 
 export default function Home() {
@@ -23,6 +24,9 @@ export default function Home() {
 
       {/* Main Form */}
       <GlucoseForm onReadingSaved={() => setRefreshKey(prev => prev + 1)} />
+
+      {/* Charts */}
+      <GlucoseChart refreshTrigger={refreshKey} />
 
       {/* History Section */}
       <GlucoseHistory refreshTrigger={refreshKey} />
