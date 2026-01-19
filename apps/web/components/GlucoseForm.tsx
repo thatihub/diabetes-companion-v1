@@ -29,8 +29,10 @@ export default function GlucoseForm() {
             // Auto-hide success message after 3s
             setTimeout(() => setSuccess(false), 3000);
         } catch (err: any) {
-            setError("Failed to save reading. Please try again.");
             console.error(err);
+            // Show actual error message if available, otherwise generic
+            const message = err?.message || "Unknown error occurred";
+            setError(`Error: ${message}`);
         } finally {
             setLoading(false);
         }
