@@ -56,7 +56,7 @@ insightsRouter.post("/analyze", async (req, res, next) => {
 
     } catch (err) {
         console.error("AI Error:", err);
-        // Fallback if API fails
-        res.status(500).json({ error: "Failed to generate insights. Check API Key." });
+        // Return actual error for debugging
+        res.status(500).json({ error: err.message || "Failed to generate insights" });
     }
 });
