@@ -1,8 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import GlucoseForm from "../components/GlucoseForm";
 import GlucoseHistory from "../components/GlucoseHistory";
+import { useState } from "react";
 
 export default function Home() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <main className="flex min-h-screen flex-col items-center p-6 space-y-8">
 
@@ -17,10 +22,10 @@ export default function Home() {
       </div>
 
       {/* Main Form */}
-      <GlucoseForm />
+      <GlucoseForm onReadingSaved={() => setRefreshKey(prev => prev + 1)} />
 
       {/* History Section */}
-      <GlucoseHistory />
+      <GlucoseHistory refreshTrigger={refreshKey} />
 
       {/* Footer / Status */}
       <div className="absolute bottom-6 flex flex-col items-center gap-2">

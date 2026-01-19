@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "../lib/api";
 
-export default function GlucoseForm() {
+export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () => void }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
@@ -25,6 +25,7 @@ export default function GlucoseForm() {
             await api.post("/api/glucose", data);
             setSuccess(true);
             (e.target as HTMLFormElement).reset();
+            if (onReadingSaved) onReadingSaved();
 
             // Auto-hide success message after 3s
             setTimeout(() => setSuccess(false), 3000);

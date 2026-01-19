@@ -11,7 +11,7 @@ type GlucoseReading = {
     measured_at: string;
 };
 
-export default function GlucoseHistory() {
+export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: number }) {
     const [readings, setReadings] = useState<GlucoseReading[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -30,7 +30,7 @@ export default function GlucoseHistory() {
 
     useEffect(() => {
         fetchReadings();
-    }, []);
+    }, [refreshTrigger]);
 
     if (loading) return <div className="text-zinc-500 text-sm animate-pulse">Loading history...</div>;
     if (error) return <div className="text-red-400 text-sm">{error}</div>;
