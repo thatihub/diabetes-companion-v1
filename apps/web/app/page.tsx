@@ -31,13 +31,7 @@ export default function Home() {
       {/* History Section */}
       <GlucoseHistory refreshTrigger={refreshKey} />
 
-      {/* Footer / Status */}
-      <div className="mt-8 py-6">
-        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 rounded-full border border-zinc-800">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-xs font-medium text-zinc-500">System Online</span>
-        </div>
-      </div>
+
 
     </main>
   );
