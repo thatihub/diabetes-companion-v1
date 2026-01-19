@@ -119,7 +119,7 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
                                 yAxisId="events"
                                 orientation="right"
                                 hide={true} // Hide it to keep UI clean, but use scale
-                                domain={[0, 150]} // Scale so 50g carb corresponds to ~1/3 chart height
+                                domain={[0, 600]} // Scale so 50g carb corresponds to < 10% chart height
                             />
 
                             <Tooltip
