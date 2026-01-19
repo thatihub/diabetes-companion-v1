@@ -38,6 +38,19 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
     if (error) return <div className="text-red-400 text-sm">{error}</div>;
     if (readings.length === 0) return <div className="text-zinc-500 text-sm">No logs yet.</div>;
 
+    const handleDelete = async (id: number) => {
+        if (!confirm("Are you sure you want to delete this log?")) return;
+        try {
+            await api.delete(`/api/glucose/${id}`);
+            // Refresh logic - ideally we lift this up or just re-fetch locally
+            fetchReadings();
+            // Also trigger parent refresh if needed, but local fetch is enough for visual consistency
+        } catch (err) {
+            console.error("Failed to delete", err);
+            alert("Failed to delete log");
+        }
+    };
+
     return (
         <div className="w-full max-w-sm space-y-3">
             <div className="flex items-center justify-between">
@@ -54,7 +67,7 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                 {readings.map((reading) => (
                     <div
                         key={reading.id}
-                        className="flex items-center justify-between p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-xl"
+                        className="group flex items-center justify-between p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-xl relative overflow-hidden"
                     >
                         <div className="flex items-center gap-3">
                             <div className={`
@@ -90,6 +103,15 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                                 {new Date(reading.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                         </div>
+
+                        {/* Delete Button (Visible on hover or always on mobile via spacing? Let's make it absolute right) */}
+                        <button
+                            onClick={() => handleDelete(reading.id)}
+                            className="absolute right-0 top-0 bottom-0 w-12 bg-red-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm"
+                            aria-label="Delete"
+                        >
+                            <span className="text-xl font-bold">×</span>
+                        </button>
                     </div>
                 ))}
             </div>
