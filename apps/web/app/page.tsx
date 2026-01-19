@@ -32,7 +32,9 @@ export default function Home() {
       <GlucoseHistory refreshTrigger={refreshKey} />
 
 
-
+      <div className="mt-8 text-center">
+        <span className="text-[10px] text-zinc-700 font-mono">Build: v1.0.12 (Bars Updated)</span>
+      </div>
     </main>
   );
 }
