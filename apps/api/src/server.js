@@ -21,7 +21,7 @@ app.use(cors());
 // Routes
 app.use("/", healthRouter);
 app.use("/api", glucoseRouter);
-app.use("/api", insightsRouter);
+app.use("/api/insights", insightsRouter);
 
 // Simple root
 app.get("/", (req, res) => {

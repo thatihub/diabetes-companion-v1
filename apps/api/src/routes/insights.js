@@ -1,106 +1,62 @@
+
 import { Router } from "express";
-import OpenAI from "openai";
+import { OpenAI } from "openai";
+import { query } from "../db.js";
 
 export const insightsRouter = Router();
 
-// OpenAI Client (Optional - will fallback to Rule-based if key is missing)
-const openai = process.env.OPENAI_API_KEY
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null;
-
-/**
- * POST /api/insights/generate
- * Body: { readings: glucoseReading[] }
- */
-insightsRouter.post("/insights/generate", async (req, res, next) => {
-    try {
-        const { readings } = req.body;
-
-        if (!readings || readings.length === 0) {
-            return res.status(400).json({ error: "No readings provided for analysis" });
-        }
-
-        // 1. ALWAYS Run Rule-Based Analysis (as fallback or ground truth)
-        const ruleBased = performRuleAnalysis(readings);
-
-        // 2. Try AI if Key exists
-        if (openai) {
-            try {
-                const aiInsight = await generateAIInsight(readings);
-                return res.json(aiInsight);
-            } catch (err) {
-                console.error("AI Insight Error, falling back to Rules:", err.message);
-            }
-        }
-
-        // 3. Fallback to Rule-Based
-        res.json(ruleBased);
-
-    } catch (err) {
-        next(err);
-    }
+// Initialize OpenAI key
+// Note: Ensure OPENAI_API_KEY is in .env 
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
 /**
- * Robust Rule-Based Insight Engine
+ * POST /api/insights/analyze
+ * Analyzes the last 48 hours of data
  */
-function performRuleAnalysis(readings) {
-    const avg = readings.reduce((acc, r) => acc + r.glucose_mgdl, 0) / readings.length;
-    const lows = readings.filter(r => r.glucose_mgdl < 70);
-    const highs = readings.filter(r => r.glucose_mgdl > 140);
-    const carbHighs = readings.filter(r => r.carbs_g > 50 && r.glucose_mgdl > 140);
-    const latest = readings[0];
+insightsRouter.post("/analyze", async (req, res, next) => {
+    try {
+        // 1. Fetch recent data (last 48h)
+        const result = await query(
+            `select * from glucose_readings 
+             where measured_at > now() - interval '48 hours'
+             order by measured_at desc`
+        );
+        const readings = result.rows;
 
-    let summary = "";
-    let suggestion = "";
-    let status = "normal";
+        // 2. Prepare prompt
+        if (readings.length < 3) {
+            return res.json({ analysis: "Not enough data to analyze. Please log more readings!" });
+        }
 
-    const disclaimer = "Educational analysis only. Consult your doctor for medical advice.";
+        const formattedData = readings.map(r =>
+            `- ${new Date(r.measured_at).toLocaleString()}: ${r.glucose_mgdl} mg/dL, Carbs: ${r.carbs_grams || 0}g, Insulin: ${r.insulin_units || 0}u ${r.meal_tag ? `(${r.meal_tag})` : ''}`
+        ).join("\n");
 
-    if (lows.length > 0) {
-        status = "low";
-        summary = `I noticed ${lows.length} reading(s) below 70 mg/dL. Hypoglycemia can make you feel shaky or dizzy.`;
-        suggestion = "Always keep a fast-acting carb (like glucose tabs or juice) nearby. Check if these lows happen at a specific time of day.";
-    } else if (highs.length > 3 || avg > 150) {
-        status = "warning";
-        summary = `Your average glucose is ${Math.round(avg)} mg/dL, which is slightly above target. Trends show several readings in the higher range.`;
-        suggestion = "Try tracking which specific meals precede these spikes. Adding 10 minutes of light walking after meals may help lower these numbers.";
-    } else if (carbHighs.length > 0) {
-        status = "warning";
-        summary = "You seem to have higher spikes when meals exceed 50g of carbohydrates.";
-        suggestion = "Consider 'carb pairing' (eating fiber/fat/protein before carbs) to see if it blunts the glucose response.";
-    } else {
-        summary = `Solid progress! Your average of ${Math.round(avg)} mg/dL and current trends show you are managing your levels well.`;
-        suggestion = "Consistency is key. Keep logging your activity and meals to help the AI spot even more subtle patterns.";
+        const prompt = `
+        You are a helpful, encouraging diabetes assistant. Analyze these glucose logs from the last 48 hours.
+        Identify 1-2 key patterns (e.g., specific times of high/low, response to carbs).
+        Keep it brief (max 3 sentences). Be encouraging.
+        
+        Data:
+        ${formattedData}
+        `;
+
+        // 3. Call GPT-4o
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o", // or gpt-3.5-turbo if cost is concern, but gpt-4o is smarter
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 150,
+        });
+
+        const analysis = completion.choices[0].message.content;
+
+        res.json({ analysis });
+
+    } catch (err) {
+        console.error("AI Error:", err);
+        // Fallback if API fails
+        res.status(500).json({ error: "Failed to generate insights. Check API Key." });
     }
-
-    return { summary, suggestion, status, disclaimer };
-}
-
-/**
- * OpenAI Insight Generator
- */
-async function generateAIInsight(readings) {
-    const prompt = `
-    Analyze the following glucose readings for a person with diabetes.
-    Provide a reflection on patterns and an educational suggestion.
-    
-    Data: ${JSON.stringify(readings.slice(0, 20))}
-    
-    Return ONLY a JSON object with this structure:
-    {
-      "summary": "Short 2-3 sentence reflection on trends",
-      "suggestion": "Educational lifestyle tip (not medical advice)",
-      "status": "low", "warning", or "normal",
-      "disclaimer": "Educational analysis only. Consult your doctor for medical advice."
-    }
-    `;
-
-    const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
-    });
-
-    return JSON.parse(response.choices[0].message.content);
-}
+});
