@@ -20,6 +20,7 @@ export default function Home() {
         <p className="text-zinc-500 text-sm">
           Track your levels, gain insights.
         </p>
+        <p className="text-[10px] text-zinc-700 font-mono mt-1">v1.0.12 (Bars Updated)</p>
       </div>
 
       {/* Main Form */}
@@ -32,9 +33,6 @@ export default function Home() {
       <GlucoseHistory refreshTrigger={refreshKey} />
 
 
-      <div className="mt-8 text-center">
-        <span className="text-[10px] text-zinc-700 font-mono">Build: v1.0.12 (Bars Updated)</span>
-      </div>
     </main>
   );
 }
