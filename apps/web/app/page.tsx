@@ -28,15 +28,10 @@ export default function Home() {
       <GlucoseHistory refreshTrigger={refreshKey} />
 
       {/* Footer / Status */}
-      <div className="absolute bottom-6 flex flex-col items-center gap-2">
+      <div className="absolute bottom-6">
         <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 rounded-full border border-zinc-800">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <span className="text-xs font-medium text-zinc-500">System Online</span>
-        </div>
-
-        {/* Debug Info - Remove later */}
-        <div className="text-[10px] text-zinc-700 font-mono">
-          API: {process.env.NEXT_PUBLIC_API_BASE_URL || "Localhost"}
         </div>
       </div>
 
