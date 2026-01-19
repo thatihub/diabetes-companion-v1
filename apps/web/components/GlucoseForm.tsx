@@ -19,6 +19,8 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
             glucose_mgdl: Number(formData.get("glucose")),
             meal_tag: formData.get("meal_tag"),
             notes: formData.get("notes"),
+            carbs_grams: Number(formData.get("carbs")) || 0,
+            insulin_units: Number(formData.get("insulin")) || 0,
         };
 
         try {
@@ -71,6 +73,33 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                         <option value="bedtime">Bedtime</option>
                         <option value="other">Other</option>
                     </select>
+                </div>
+
+
+                {/* Carbs & Insulin Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Carbs */}
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-zinc-400">Carbs (g)</label>
+                        <input
+                            name="carbs"
+                            type="number"
+                            placeholder="0"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+
+                    {/* Insulin */}
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-zinc-400">Insulin (Units)</label>
+                        <input
+                            name="insulin"
+                            type="number"
+                            step="0.1"
+                            placeholder="0.0"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
                 </div>
 
                 {/* Notes */}

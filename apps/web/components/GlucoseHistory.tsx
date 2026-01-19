@@ -9,6 +9,8 @@ type GlucoseReading = {
     meal_tag: string;
     notes: string;
     measured_at: string;
+    insulin_units?: number;
+    carbs_grams?: number;
 };
 
 export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: number }) {
@@ -71,12 +73,21 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                             </div>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right space-y-1">
+                            <div className="flex justify-end gap-2">
+                                {(reading.insulin_units || 0) > 0 && (
+                                    <span className="text-[10px] font-bold text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded">
+                                        {reading.insulin_units}u
+                                    </span>
+                                )}
+                                {(reading.carbs_grams || 0) > 0 && (
+                                    <span className="text-[10px] font-bold text-orange-400 bg-orange-900/30 px-1.5 py-0.5 rounded">
+                                        {reading.carbs_grams}g
+                                    </span>
+                                )}
+                            </div>
                             <div className="text-xs text-zinc-500">
                                 {new Date(reading.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                            <div className="text-xs text-zinc-600">
-                                {new Date(reading.measured_at).toLocaleDateString()}
                             </div>
                         </div>
                     </div>
