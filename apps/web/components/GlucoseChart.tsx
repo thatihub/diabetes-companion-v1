@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
+import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 import { api } from "../lib/api";
 
 type GlucosePoint = {
     glucose_mgdl: number;
     measured_at: string;
+    carbs_grams?: number;
+    insulin_units?: number;
 };
 
 type Range = "24h" | "3d" | "7d" | "14d" | "30d" | "90d";
@@ -33,12 +35,10 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
             setLoading(true);
             try {
                 const hours = getHours(range);
-                // Fetch all points within the time range
                 const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=1000`);
 
                 const sorted = points.reverse().map(p => ({
                     ...p,
-                    // Format date differently based on range
                     time: range === "24h"
                         ? new Date(p.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : new Date(p.measured_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
@@ -53,8 +53,6 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
         };
         fetchData();
     }, [refreshTrigger, range]);
-
-    // Helper for loading state per-range? No, generic is fine.
 
     const ranges: Range[] = ["24h", "3d", "7d", "14d", "30d", "90d"];
 
@@ -85,7 +83,7 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
             ) : (
                 <div className="h-48 w-full -ml-4">
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data}>
+                        <ComposedChart data={data}>
                             <defs>
                                 <linearGradient id="colorGlucose" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -93,6 +91,8 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+
+                            {/* Time Axis */}
                             <XAxis
                                 dataKey="time"
                                 stroke="#52525b"
@@ -101,7 +101,10 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
                                 axisLine={false}
                                 minTickGap={30}
                             />
+
+                            {/* Glucose Axis (Left) */}
                             <YAxis
+                                yAxisId="glucose"
                                 hide={false}
                                 stroke="#52525b"
                                 fontSize={10}
@@ -110,22 +113,57 @@ export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: numb
                                 domain={[40, 300]}
                                 allowDataOverflow={false}
                             />
+
+                            {/* Carbs/Insulin Axis (Right, Hidden or Small) */}
+                            <YAxis
+                                yAxisId="events"
+                                orientation="right"
+                                hide={true} // Hide it to keep UI clean, but use scale
+                                domain={[0, 150]} // Scale so 50g carb corresponds to ~1/3 chart height
+                            />
+
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
                                 itemStyle={{ color: '#fff' }}
                             />
-                            <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" />
-                            <ReferenceLine y={180} stroke="#f97316" strokeDasharray="3 3" />
 
+                            <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" />
+                            <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" />
+
+                            {/* Main Glucose Trend */}
                             <Area
+                                yAxisId="glucose"
                                 type="monotone"
                                 dataKey="glucose_mgdl"
+                                name="Glucose"
                                 stroke="#3b82f6"
                                 strokeWidth={3}
                                 fillOpacity={1}
                                 fill="url(#colorGlucose)"
                             />
-                        </AreaChart>
+
+                            {/* Carbs Bar (Orange) */}
+                            <Bar
+                                yAxisId="events"
+                                dataKey="carbs_grams"
+                                name="Carbs (g)"
+                                fill="#fb923c"
+                                barSize={4}
+                                radius={[2, 2, 0, 0]}
+                                fillOpacity={0.8}
+                            />
+
+                            {/* Insulin Bar (Purple/Blue) */}
+                            <Bar
+                                yAxisId="events"
+                                dataKey="insulin_units"
+                                name="Insulin (u)"
+                                fill="#8b5cf6"
+                                barSize={4}
+                                radius={[2, 2, 0, 0]}
+                            />
+
+                        </ComposedChart>
                     </ResponsiveContainer>
                 </div>
             )}
