@@ -1,5 +1,6 @@
 import Image from "next/image";
 import GlucoseForm from "../components/GlucoseForm";
+import GlucoseHistory from "../components/GlucoseHistory";
 
 export default function Home() {
   return (
@@ -17,6 +18,9 @@ export default function Home() {
 
       {/* Main Form */}
       <GlucoseForm />
+
+      {/* History Section */}
+      <GlucoseHistory />
 
       {/* Footer / Status */}
       <div className="absolute bottom-6">
