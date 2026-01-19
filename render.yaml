@@ -42,7 +42,4 @@ services:
     # Environment variables
     envVars:
       - key: NEXT_PUBLIC_API_BASE_URL
-        fromService:
-          type: web
-          name: diabetes-companion-api
-          property: host
+        value: https://diabetes-companion-api.onrender.com
