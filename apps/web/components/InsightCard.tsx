@@ -13,9 +13,12 @@ export default function InsightCard() {
         try {
             const res = await api.post<{ analysis: string }>("/api/insights/analyze", {});
             setAnalysis(res.analysis);
-        } catch (err) {
-            console.error(err);
-            setAnalysis("Failed to generate insights. Please try again later.");
+        } catch (err: any) {
+            console.error("Insight Error:", err);
+            // Try to extract message
+            let msg = "Failed to generate insights.";
+            if (err.message) msg += ` (${err.message})`;
+            setAnalysis(msg);
         } finally {
             setLoading(false);
         }
