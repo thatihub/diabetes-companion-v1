@@ -8,13 +8,12 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-// For Supabase + Render: always use SSL in production.
-// pg uses ssl: { rejectUnauthorized: false } for managed Postgres commonly.
-const isProd = process.env.NODE_ENV === "production";
+// Force rejectUnauthorized to false before creating the pool
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 export const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: isProd ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false }
 });
 
 // Quick helper for queries

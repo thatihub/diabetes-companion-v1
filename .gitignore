@@ -1,7 +1,10 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ███████████████████████████████████████████████████████████
+# DIABETES COMPANION V1 — GITIGNORE
+# ███████████████████████████████████████████████████████████
 
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,32 +13,57 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# Build outputs
+.next/
+**/.next/
+out/
+**/out/
+build/
+**/build/
+dist/
+**/dist/
 
-# next.js
-/.next/
-/out/
+# Environment files
+.env
+.env.local
+.env*.local
+apps/web/.env*
+apps/api/.env
+!apps/web/.env.example
+!apps/api/.env.example
+!.env.example
 
-# production
-/build
+# Testing
+coverage/
+**/coverage/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# OS files
+.DS_Store
+*.pem
+Thumbs.db
 
-# vercel
-.vercel
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Vercel
+.vercel
+
+# Temporary
+*.tmp
+.cache/
+
