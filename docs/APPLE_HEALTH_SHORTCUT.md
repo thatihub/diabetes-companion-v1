@@ -51,7 +51,34 @@ To make it run automatically:
 
 ## 4. Troubleshooting
 - If it fails, check your Render logs.
-- Ensure `measures_at` format from Apple Health matches your DB (ISO String). Usually Shortcuts handles this well.
 
----
-**Note**: This simple sync might create duplicates if run too often. Your API should handle duplicates (e.g., `ON CONFLICT DO NOTHING`) or you can rely on the short time window (3h) and infrequent runs.
+## 5. Alternative: Manual/Voice Log Shortcut 🎤
+
+If you can't sync with Apple Health, creating a **Voice Log** shortcut is the fastest way to enter data.
+
+**How it works:**
+1. Say "Hey Siri, Log Glucose".
+2. Siri asks "What is the reading?".
+3. You say "120".
+4. It logs to your app.
+
+### Steps to Create:
+
+1. **Create New Shortcut** named **"Log Glucose"**.
+2. **Action**: `Ask for Input`
+   - Prompt: "What is your glucose?"
+   - Type: `Number`
+3. **Action**: `Get Contents of URL`
+   - **URL**: `YOUR_APP_URL/api/glucose`
+   - **Method**: `POST`
+   - **Headers**: `Content-Type: application/json`
+   - **Request Body (JSON)**:
+     - `glucose_mgdl`: (Number) `Provided Input` (Variable from Step 2)
+     - `measured_at`: (Date) `Current Date`
+     - `notes`: "Voice Log"
+4. **Action**: `Show Notification` -> "Logged `Provided Input` mg/dL".
+
+**Usage:**
+- Tap the shortcut anytime.
+- Or say "Hey Siri, Log Glucose".
+
