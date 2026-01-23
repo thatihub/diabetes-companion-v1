@@ -1,94 +1,100 @@
-# 🍏 Apple Health & Voice Automation Guide
+# � Apple Health + Voice Shortcuts Guide (Master Spec)
 
-This guide enables two powerful workflows for **Diabetes Companion**:
-1. **Sync Latest Glucose**: Automatically pull the most recent CGM/BGM reading from Apple Health.
-2. **Voice Log**: Use Siri to log a number manually ("Hey Siri, Log Glucose... 120").
+This guide provides precise, step-by-step instructions for setting up two reliable iOS Shortcuts to sync glucose data to your Diabetes Companion.
 
 ---
 
-## 📋 Prerequisites
+## 🏗️ 0. Prerequisites
 - **API URL**: `https://diabetes-companion-api.onrender.com/api/glucose`
-- **iPhone** with Apple Health data (Dexcom G7, Libre, or Manual entries).
+- **Verification**: Ensure you can open this URL in Safari (it might say "Cannot GET" but should load, proving connection).
+- **Apple Health Data**: Ensure "Browse > Blood Glucose" has data.
 
 ---
 
-## 🛠 Workflow A: "Sync Latest Glucose" (Automated)
-*Best for: Pulling Dexcom data automatically.*
+## � Workflow A: "Sync Latest Glucose" (Dexcom/Health → App)
+*Use this to automatically pull the most recent CGM reading.*
 
-### 1. Create the Shortcut
-Open **Shortcuts App** -> Tap **+** (Top Right) -> Name it **"Sync Latest Glucose"**.
+### Step 1: Create Shortcut
+1. Open **Shortcuts** app > Tap **+** > Name it **"Sync Latest Glucose"**.
 
-### 2. Add Actions (Tap "Add Action" for each)
+### Step 2: Find Data
+2.  Add Action: **Find Health Samples**.
+    - **Type**: Blood Glucose.
+    - **Sort by**: Start Date.
+    - **Order**: Latest First.
+    - **Limit**: ON -> **1 sample**.
 
-#### Step A: Find the Data
-1.  **Search**: `Find Health Samples`.
-2.  **Type**: Tap "Type" -> Select **Blood Glucose**.
-3.  **Sort by**: Tap "Start Date" -> Select **Start Date**.
-4.  **Order**: Tap "Oldest First" -> Change to **Latest First**.
-5.  **Limit**: Turn ON "Limit" -> Set to **1 sample**.
+### Step 3: Safety Check (Critical)
+3.  Add Action: **If**.
+    - Condition: `If [Health Samples] does not have any value`.
+4.  Inside "If":
+    - Add Action: **Show Notification** ("No glucose data found in Apple Health").
+    - Add Action: **Stop this shortcut**.
+5.  **End If**.
 
-#### Step B: Get Details (Variables)
-1.  **Search**: `Get Details of Health Sample`.
-    - *Input should auto-select "Health Samples".*
-    - Tap "Value" (or whatever property is shown) -> Select **Value**.
-2.  **Search**: `Get Details of Health Sample`.
-    - *Input should auto-select "Health Samples".*
-    - Tap "Value" -> Select **Start Date**.
+### Step 4: Get Details (Variables)
+6.  Add Action: **Get Details of Health Sample**.
+    - Detail: **Value**. (Assign to variable `healthValue`).
+7.  Add Action: **Get Details of Health Sample**.
+    - Detail: **Start Date**. (Assign to variable `healthStartDate`).
 
-#### Step C: Check if Data Exists (Safety)
-1.  **Search**: `If`.
-    - Logic: `If` [Health Samples] `does not have any value`.
-2.  **Search**: `Show Notification`.
-    - Message: "No glucose data found in 24h."
-3.  **Search**: `Stop this shortcut`.
-4.  **Search**: `End If`. (This closes the block).
+### Step 5: Send to API
+8.  Add Action: **Get Contents of URL**.
+    - **URL**: `https://diabetes-companion-api.onrender.com/api/glucose` (Plain Text!).
+    - **Method**: POST.
+    - **Headers**:
+        - `Content-Type`: `application/json`
+    - **Request Body**: JSON. Add 3 fields:
+        - `glucose_mgdl` (Number): `healthValue`.
+        - `measured_at` (Text): `healthStartDate`.
+           - *Tip: Tap the `healthStartDate` variable and set Date Format to **ISO 8601**.*
+        - `notes` (Text): "Apple Health Sync".
+        - `source` (Text): "apple_health" (Optional).
 
-#### Step D: Send to API
-1.  **Search**: `Get Contents of URL`.
-    - **URL**: `https://diabetes-companion-api.onrender.com/api/glucose`
-    - **Method**: Tap `GET` -> Change to **`POST`**.
-    - **Headers**: Tap arrow -> Add new header:
-        - Key: `Content-Type`
-        - Value: `application/json`
-    - **Request Body**: Tap `JSON`. Add 3 Fields:
-        - **`glucose_mgdl`** (Number): Select variable from **Step B.1** (Value).
-        - **`measured_at`** (Text): Select variable from **Step B.2** (Start Date).
-            - *Critical*: Tap the variable "Start Date" inside the field -> Select Date Format: **ISO 8601**.
-        - **`notes`** (Text): "Apple Health Sync"
-
-#### Step E: Notify Success
-1.  **Search**: `Show Notification`.
-    - Message: "Synced Glucose!" (You can insert variables like "Value" here).
+### Step 6: Success
+9.  Add Action: **Show Notification**.
+    - Message: "Synced Glucose!"
 
 ---
 
-## 🎤 Workflow B: "Voice Log Glucose" (Manual)
-*Best for: "Hey Siri, Log 120" when you are away from your CGM.*
+## 🎤 Workflow B: "Log Glucose" (Voice Command)
+*Use this for manual entry: "Hey Siri, Log Glucose".*
 
-### 1. Create the Shortcut
-Open **Shortcuts App** -> Tap **+** -> Name it **"Log Glucose"**.
+### Step 1: Create Shortcut
+1. Open **Shortcuts** > Tap **+** > Name it **"Log Glucose"**.
 
-### 2. Add Actions
-1.  **Action**: `Ask for Input`.
+### Step 2: Ask for Input
+2.  Add Action: **Ask for Input**.
     - Prompt: "What is your glucose?"
     - Type: **Number**.
-2.  **Action**: `Get Contents of URL`.
+
+### Step 3: Send to API
+3.  Add Action: **Get Contents of URL**.
     - **URL**: `https://diabetes-companion-api.onrender.com/api/glucose`
-    - **Method**: `POST`
+    - **Method**: POST.
     - **Headers**: `Content-Type: application/json`
-    - **Body (JSON)**:
-        - **`glucose_mgdl`** (Number): Select **Provided Input** (from Step 1).
-        - **`notes`** (Text): "Voice Log"
-3.  **Action**: `Show Notification`.
-    - Message: "Logged!"
+    - **Request Body**: JSON.
+        - `glucose_mgdl` (Number): **Provided Input** (Variable from Step 2).
+        - `measured_at` (Text): **Current Date**.
+        - `notes` (Text): "Voice Log".
+        - `source` (Text): "voice_shortcut".
+
+### Step 4: Success
+4.  Add Action: **Show Notification**.
+    - Message: "Logged `Provided Input` mg/dL".
 
 ---
 
-## ⚠️ Troubleshooting
-- **"No data found"**:
-  - Open Apple Health -> Browse -> Vitals -> Blood Glucose.
-  - Scroll top bottom -> **Show All Data**. If empty, check Dexcom Permissions (iPhone Settings -> Privacy -> Health).
-- **"Network Error"**:
-  - Ensure your API is running (Render website is accessible).
-- **Date Format Error**:
-  - In the "Get Contents of URL" step, ensure `measured_at` variable is set to **ISO 8601** format (Tap on the variable to configure).
+## ⚠️ Troubleshooting Tips
+
+1. **"Rich Text to URL" Error**:
+   - Delete the URL field completely and **type it manually**. Do not paste formatted text. It must be a plain, single-line string.
+
+2. **"No Data Found"**:
+   - Shortcuts says "No data" but you see it in Health? Check permissions: **iPhone Settings > Privacy > Health > Shortcuts**. Ensure Shortcuts has Read access to Blood Glucose.
+
+3. **Date Format**:
+   - If the API rejects the date, verify you set the variable to **ISO 8601**. If that option is missing in your iOS version, sending it as default text usually works (Backend will fallback to "Now").
+
+4. **Duplicates**:
+   - Automation might send the same "Latest" sample multiple times. The Backend should handle this (or you can ignore it as harmless redundancy).
