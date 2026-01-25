@@ -1,9 +1,9 @@
 # 🗄️ Project Cabinet: Diabetes Companion V1
 
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Status**: 🟢 Production Ready (Deployed on Render)
-**Stable Commit**: `0bfc2a9` (Jan 24, 2026)
+**Stable Commit**: `8834e71` (Jan 25, 2026)
 
 ---
 
@@ -28,7 +28,7 @@
 
 ## 📜 Recent Change Log / Features Enabled
 
-### ✅ V1.1 Feature Update (Jan 25, 2026) - Trends & Analysis
+### ✅ V1.1 Feature Update (Jan 25, 2026) - Trends & Analysis [`8834e71`]
 - **New Trends Page**: Dedicated `/trends` view with stacked weekly graphs.
 - **Weekly Comparison**:
   - Vertical/Grid layout for 7d, 14d, 30d, and 90d ranges.
@@ -40,7 +40,7 @@
   - Created reusable `BaseGlucoseChart` component.
   - Env variable fix for reliable API key loading.
 
-### ✅ V1.0 Release
+### ✅ V1.0 Release [`0bfc2a9`]
 - **Core Logging**: Glucose entry (mg/dL) with timestamps.
 - **Visuals**: 
   - Dynamic Line Chart (24h - 90d ranges).
