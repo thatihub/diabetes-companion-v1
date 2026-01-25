@@ -36,8 +36,10 @@ insightsRouter.post("/analyze", async (req, res, next) => {
 
         const prompt = `
         You are a helpful, encouraging diabetes assistant. Analyze these glucose logs from the last 48 hours.
-        Identify 1-2 key patterns (e.g., specific times of high/low, response to carbs).
-        Keep it brief (max 3 sentences). Be encouraging.
+        Identify 2-3 key patterns (e.g., overnight trends, response to carbs, pre-meal spikes).
+        Format your response as a clean bulleted list (use '•').
+        Keep each point concise (1 sentence). Be encouraging.
+        Start directly with the first bullet.
         
         Data:
         ${formattedData}
