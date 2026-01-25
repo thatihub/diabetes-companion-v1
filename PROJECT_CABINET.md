@@ -55,6 +55,10 @@
   - `apps/api/src/routes/glucose.js`: Core CRUD API.
   - `apps/api/src/routes/insights.js`: AI Prompt logic.
 
+## 🌿 Experimental Branches
+- **`feature/dexcom-integration`**: Contains V2 OAuth code for direct Dexcom API connection.
+  - To view/work on this: `git checkout feature/dexcom-integration`
+
 ---
 
 *Last Updated: Jan 24, 2026*
