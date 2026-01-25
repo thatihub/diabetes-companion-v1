@@ -3,6 +3,7 @@
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
 **Version**: 1.0.0
 **Status**: 🟢 Production Ready (Deployed on Render)
+**Stable Commit**: `0bfc2a9` (Jan 24, 2026)
 
 ---
 
