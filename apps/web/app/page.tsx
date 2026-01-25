@@ -5,6 +5,7 @@ import GlucoseForm from "../components/GlucoseForm";
 import GlucoseHistory from "../components/GlucoseHistory";
 import GlucoseChart from "../components/GlucoseChart";
 import InsightCard from "../components/InsightCard";
+import DexcomConnect from "../components/DexcomConnect";
 import { useState } from "react";
 
 export default function Home() {
@@ -29,6 +30,9 @@ export default function Home() {
 
       {/* Charts */}
       <GlucoseChart refreshTrigger={refreshKey} />
+
+      {/* Integrations */}
+      <DexcomConnect />
 
       {/* AI Insights */}
       <InsightCard />

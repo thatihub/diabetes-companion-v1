@@ -4,6 +4,7 @@ import cors from "cors";
 import { healthRouter } from "./routes/health.js";
 import { glucoseRouter } from "./routes/glucose.js";
 import { insightsRouter } from "./routes/insights.js";
+import { dexcomRouter } from "./routes/dexcom.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(cors());
 app.use("/", healthRouter);
 app.use("/api", glucoseRouter);
 app.use("/api/insights", insightsRouter);
+app.use("/api/dexcom", dexcomRouter);
 
 // Simple root
 app.get("/", (req, res) => {
