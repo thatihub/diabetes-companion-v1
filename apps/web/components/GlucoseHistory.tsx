@@ -80,8 +80,9 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                                 <div className="font-bold text-white text-lg leading-none">
                                     {reading.glucose_mgdl} <span className="text-xs text-zinc-500 font-normal">mg/dL</span>
                                 </div>
-                                <div className="text-xs text-zinc-400 capitalize">
-                                    {reading.meal_tag.replace('_', ' ')}
+                                <div className="text-xs text-zinc-400 capitalize truncate max-w-[12rem]">
+                                    {reading.meal_tag ? reading.meal_tag.replace('_', ' ') :
+                                        reading.notes ? reading.notes : '—'}
                                 </div>
                             </div>
                         </div>
