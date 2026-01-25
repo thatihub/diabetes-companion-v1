@@ -3,7 +3,19 @@
 import { useState } from "react";
 import { api } from "../lib/api";
 
-export default function InsightCard() {
+interface InsightCardProps {
+    startDate?: string | Date;
+    endDate?: string | Date;
+    context?: "weekly" | "comparison" | "general";
+    title?: string;
+}
+
+export default function InsightCard({
+    startDate,
+    endDate,
+    context = "general",
+    title = "✨ AI Insights"
+}: InsightCardProps) {
     const [loading, setLoading] = useState(false);
     const [analysis, setAnalysis] = useState<string | null>(null);
 
@@ -11,7 +23,11 @@ export default function InsightCard() {
         setLoading(true);
         setAnalysis(null);
         try {
-            const res = await api.post<{ analysis: string }>("/api/insights/analyze", {});
+            const payload: any = { context };
+            if (startDate) payload.startDate = startDate;
+            if (endDate) payload.endDate = endDate;
+
+            const res = await api.post<{ analysis: string }>("/api/insights/analyze", payload);
             setAnalysis(res.analysis);
         } catch (err: any) {
             console.error("Insight Error:", err);
@@ -28,14 +44,14 @@ export default function InsightCard() {
         <div className="w-full max-w-sm bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-4 shadow-xl mb-6">
             <div className="flex items-center justify-between mb-2">
                 <h3 className="text-indigo-200 text-sm font-medium uppercase tracking-wider flex items-center gap-2">
-                    ✨ AI Insights
+                    {title}
                 </h3>
             </div>
 
             {!analysis && !loading && (
                 <div className="text-center py-2">
                     <p className="text-zinc-400 text-xs mb-3">
-                        Get a summary of your recent patterns and tips based on your last 48h data.
+                        Get a summary of patterns and tips based on this data.
                     </p>
                     <button
                         onClick={handleAnalyze}

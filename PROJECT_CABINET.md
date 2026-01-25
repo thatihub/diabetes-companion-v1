@@ -26,22 +26,30 @@
 
 ---
 
-## 📜 recent Change Log / Features Enabled
+## 📜 Recent Change Log / Features Enabled
 
-### ✅ V1.0 Release (Current)
+### ✅ V1.1 Feature Update (Jan 25, 2026) - Trends & Analysis
+- **New Trends Page**: Dedicated `/trends` view with stacked weekly graphs.
+- **Weekly Comparison**:
+  - Vertical/Grid layout for 7d, 14d, 30d, and 90d ranges.
+  - Interactive charts (click to enlarge).
+- **Advanced AI Insights**:
+  - **Context-Aware**: Analyzes broad trends across multiple weeks.
+  - **Drill-Down**: "Analyze This Week" button inside individual weekly popups for targeted advice.
+- **Refactored Architecture**:
+  - Created reusable `BaseGlucoseChart` component.
+  - Env variable fix for reliable API key loading.
+
+### ✅ V1.0 Release
 - **Core Logging**: Glucose entry (mg/dL) with timestamps.
 - **Visuals**: 
   - Dynamic Line Chart (24h - 90d ranges).
   - Color-coded list view (Green/Orange/Red).
 - **AI Insights**:
-  - `Analyze Patterns` button generates bullet-point summaries of last 48h.
-  - Smart rendering of "Voice Logs".
+  - `Analyze Patterns` button generates summaries.
 - **iOS Integration**:
   - "Hey Siri, Log Glucose" (Voice Shortcut).
   - "Sync Latest Glucose" (Automated HealthKit Sync).
-- **Resilience**:
-  - Crash prevention for missing meal tags.
-  - Server auto-wake documentation.
 
 ---
 
@@ -50,10 +58,12 @@
   - `docs/APPLE_HEALTH_SHORTCUT.md`: The "Bible" for iOS Sync.
   - `QUICK_LINKS.md`: Operational dashboard links.
 - **App Code**:
-  - `apps/web/components/GlucoseChart.tsx`: Main viz logic.
-  - `apps/web/components/GlucoseHistory.tsx`: List logic (Fixed crash).
-  - `apps/api/src/routes/glucose.js`: Core CRUD API.
-  - `apps/api/src/routes/insights.js`: AI Prompt logic.
+  - `apps/web/app/trends/page.tsx`: **NEW** Trends dashboard.
+  - `apps/web/components/BaseGlucoseChart.tsx`: **NEW** Shared reusable chart.
+  - `apps/web/components/GlucoseChart.tsx`: Main dashboard chart.
+  - `apps/web/components/InsightCard.tsx`: AI Analysis UI component.
+  - `apps/api/src/routes/insights.js`: Enhanced AI Prompt logic (Context aware).
+  - `apps/api/src/env.js`: Environment override fix.
 
 ## 🌿 Experimental Branches
 - **`feature/dexcom-integration`**: Contains V2 OAuth code for direct Dexcom API connection.
@@ -61,4 +71,4 @@
 
 ---
 
-*Last Updated: Jan 24, 2026*
+*Last Updated: Jan 25, 2026*
