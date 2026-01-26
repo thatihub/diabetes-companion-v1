@@ -4,9 +4,10 @@ import { query } from "../db.js";
 
 export const dexcomRouter = Router();
 
-// CONFIG (Move to .env later, but using Sandbox hardcoded URL for clarity)
-const DEX_BASE_URL = "https://sandbox-api.dexcom.com";
-// const DEX_BASE_URL = "https://api.dexcom.com"; // Future Production
+// CONFIG: Using Production API for Individual Access
+// ⚠️ WARNING: Do not switch to Sandbox without understanding the connection limits.
+const DEX_BASE_URL = process.env.DEXCOM_BASE_URL || "https://api.dexcom.com";
+// const DEX_BASE_URL = "https://sandbox-api.dexcom.com"; 
 
 /**
  * 1. GET /api/dexcom/login
@@ -92,7 +93,7 @@ async function syncData(accessToken) {
             if (r.value) {
                 await query(
                     `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
-                     VALUES ($1, $2, 'dexcom_api', 'Sandbox Data')
+                     VALUES ($1, $2, 'dexcom_api', 'Dexcom API')
                      ON CONFLICT DO NOTHING`, // Prevent dupes if simple unique constraint exists, else might duplicate
                     [r.value, r.systemTime]
                 );

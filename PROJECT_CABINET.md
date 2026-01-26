@@ -39,6 +39,8 @@
 - **iOS Integration**:
   - "Hey Siri, Log Glucose" (Voice Shortcut).
   - "Sync Latest Glucose" (Automated HealthKit Sync).
+- **`feature/dexcom-integration`**: **ACTIVE**. Configuring for Production Access (Individual).
+  - To view/work on this: `git checkout feature/dexcom-integration`.
 - **Resilience**:
   - Crash prevention for missing meal tags.
   - Server auto-wake documentation.
