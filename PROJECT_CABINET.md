@@ -26,37 +26,40 @@
 
 ---
 
-## 📜 recent Change Log / Features Enabled
-
-### ✅ V1.0 Release (Current)
+## 📜 Recent Change Log / Features Enabled
+ 
+### ✅ V1.1 Updates (Jan 29, 2026)
+- **Dexcom Production Integration**:
+  - **Status**: 🟡 Connected & Authenticated (Waiting for Data Propagation).
+  - **Credentials**: Updated to Individual Access (Production) keys.
+  - **OAuth Flow**: Fully functional (Redirects -> Token Exchange -> Sync).
+  - **Environment**: Configured for `api.dexcom.com`.
+  - **Current State**: API is syncing 0 records. Pending 24-48h Dexcom provisioning delay for new clients.
+- **DevOps**:
+  - Updated detailed `QUICK_LINKS.md` for local dev and troubleshooting.
+ 
+### ✅ V1.0 Release (Jan 24, 2026)
 - **Core Logging**: Glucose entry (mg/dL) with timestamps.
 - **Visuals**: 
   - Dynamic Line Chart (24h - 90d ranges).
   - Color-coded list view (Green/Orange/Red).
 - **AI Insights**:
   - `Analyze Patterns` button generates bullet-point summaries of last 48h.
-  - Smart rendering of "Voice Logs".
 - **iOS Integration**:
   - "Hey Siri, Log Glucose" (Voice Shortcut).
-  - "Sync Latest Glucose" (Automated HealthKit Sync).
-- **`feature/dexcom-integration`**: **ACTIVE**. Configuring for Production Access (Individual).
-  - To view/work on this: `git checkout feature/dexcom-integration`.
-- **Resilience**:
-  - Crash prevention for missing meal tags.
-  - Server auto-wake documentation.
-
+ 
 ---
-
+ 
 ## 📂 Key File Map
 - **Docs**:
   - `docs/APPLE_HEALTH_SHORTCUT.md`: The "Bible" for iOS Sync.
   - `QUICK_LINKS.md`: Operational dashboard links.
 - **App Code**:
+  - `apps/api/src/routes/dexcom.js`: Dexcom OAuth & Sync logic.
   - `apps/web/components/GlucoseChart.tsx`: Main viz logic.
-  - `apps/web/components/GlucoseHistory.tsx`: List logic (Fixed crash).
+  - `apps/web/components/GlucoseHistory.tsx`: List logic.
   - `apps/api/src/routes/glucose.js`: Core CRUD API.
-  - `apps/api/src/routes/insights.js`: AI Prompt logic.
-
+ 
 ---
-
-*Last Updated: Jan 24, 2026*
+ 
+*Last Updated: Jan 29, 2026*

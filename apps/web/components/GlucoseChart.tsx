@@ -13,10 +13,10 @@ type GlucosePoint = {
 
 type Range = "24h" | "3d" | "7d" | "14d" | "30d" | "90d";
 
-export default function GlucoseChart({ refreshTrigger }: { refreshTrigger?: number }) {
+export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: { refreshTrigger?: number, initialRange?: Range }) {
     const [data, setData] = useState<GlucosePoint[]>([]);
     const [loading, setLoading] = useState(true);
-    const [range, setRange] = useState<Range>("24h");
+    const [range, setRange] = useState<Range>(initialRange);
 
     const getHours = (r: Range) => {
         switch (r) {

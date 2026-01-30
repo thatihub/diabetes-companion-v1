@@ -61,45 +61,86 @@ dexcomRouter.get("/callback", async (req, res) => {
         res.redirect("http://localhost:3001?dexcom_sync=success");
 
     } catch (err) {
-        console.error("Dexcom auth failed:", err.response?.data || err.message);
-        res.status(500).send("Authentication Failed. Check console.");
+        console.error("/// DEXCOM AUTH FAILED ///");
+        if (err.response) {
+            console.error("Status:", err.response.status);
+            console.error("Data:", JSON.stringify(err.response.data, null, 2));
+            console.error("Headers:", JSON.stringify(err.response.headers, null, 2));
+        } else {
+            console.error("Error:", err.message);
+        }
+        res.status(500).send("Authentication Failed. Check server console for details.");
     }
 });
 
 // Helper to fetch and sync data
 async function syncData(accessToken) {
     const now = new Date();
-    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+    // Fetch last 30 days (Standard for Production)
+    const pastDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
-    // Dexcom format: YYYY-MM-DDTHH:MM:SS
-    const startDate = twentyFourHoursAgo.toISOString().split('.')[0];
-    const endDate = now.toISOString().split('.')[0];
+    // Ensure strictly UTC format YYYY-MM-DDTHH:MM:SS
+    const startDate = pastDate.toISOString().replace(/\.\d+Z$/, "");
+    const endDate = now.toISOString().replace(/\.\d+Z$/, "");
+
+    console.log(`[Dexcom Sync] Fetching range: ${startDate} to ${endDate} (UTC)`);
+    // console.log(`[Dexcom Sync] Using Token: ${accessToken.substring(0, 10)}...`);
 
     try {
-        const response = await axios.get(`${DEX_BASE_URL}/v2/users/self/egvs`, {
-            params: {
-                startDate: startDate,
-                endDate: endDate
-            },
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
+        // Fetch Glucose (EGVs) AND Events (Carbs/Insulin) in parallel
+        const [egvRes, eventRes] = await Promise.all([
+            axios.get(`${DEX_BASE_URL}/v2/users/self/egvs`, {
+                params: { startDate, endDate },
+                headers: { Authorization: `Bearer ${accessToken}` }
+            }),
+            axios.get(`${DEX_BASE_URL}/v2/users/self/events`, {
+                params: { startDate, endDate },
+                headers: { Authorization: `Bearer ${accessToken}` }
+            })
+        ]);
 
-        const egvs = response.data.egvs || [];
-        console.log(`Fetched ${egvs.length} readings from Dexcom`);
+        const egvs = egvRes.data.egvs || [];
+        const events = eventRes.data.events || [];
 
-        // Insert into DB
+        console.log(`Fetched ${egvs.length} readings and ${events.length} events from Dexcom`);
+
+        // 1. Insert Glucose Readings
         for (const r of egvs) {
-            // Dexcom 'value' is mg/dL. 'systemTime' is ISO.
             if (r.value) {
                 await query(
                     `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
                      VALUES ($1, $2, 'dexcom_api', 'Dexcom API')
-                     ON CONFLICT DO NOTHING`, // Prevent dupes if simple unique constraint exists, else might duplicate
+                     ON CONFLICT DO NOTHING`,
                     [r.value, r.systemTime]
                 );
             }
         }
+
+        // 2. Insert Events (Carbs / Insulin)
+        for (const e of events) {
+            // Dexcom events: 'carbs', 'insulin', 'exercise', 'health'
+            // We are interested in carbs (grams) and insulin (units)
+            let carbs = e.value && e.unit === 'grams' ? e.value : null;
+            let insulin = e.value && e.unit === 'units' ? e.value : null;
+
+            // Only insert if it's relevant
+            if (carbs || insulin) {
+                await query(
+                    `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, carbs_grams, insulin_units, notes)
+                     VALUES (NULL, $1, 'dexcom_api', $2, $3, $4)
+                     ON CONFLICT DO NOTHING`,
+                    [e.systemTime, carbs, insulin, `Dexcom Event: ${e.eventType}`]
+                );
+            }
+        }
+
     } catch (error) {
-        console.error("Data fetch failed:", error.response?.data || error.message);
+        console.error("/// DEXCOM SYNC ERROR ///");
+        if (error.response) {
+            console.error("Status:", error.response.status);
+            console.error("Data:", JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error("Error:", error.message);
+        }
     }
 }
