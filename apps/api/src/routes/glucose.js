@@ -25,6 +25,7 @@ glucoseRouter.post(
             const result = await query(
                 `insert into glucose_readings (glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units)
          values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6)
+         ON CONFLICT (measured_at) DO NOTHING
          returning *`,
                 [glucose_mgdl, measured_at || null, notes || null, meal_tag || null, carbs_grams || null, insulin_units || null]
             );
