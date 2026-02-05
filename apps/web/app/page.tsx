@@ -31,9 +31,11 @@ export default function Home() {
 
       {/* Charts */}
       <GlucoseChart refreshTrigger={refreshKey} />
-      <Link href="/trends" className="text-xs text-blue-400 hover:text-blue-300 -mt-4 mb-4">
-        View Detailed Trends →
-      </Link>
+      <div className="w-full flex justify-end px-4 -mt-2 mb-6">
+        <Link href="/trends" className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-800/50 hover:bg-blue-900/40 transition-all">
+          View Detailed Trends →
+        </Link>
+      </div>
 
       {/* Integrations */}
       <DexcomConnect />
