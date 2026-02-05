@@ -36,10 +36,17 @@ export default function ProjectCabinetPage() {
                     </ul>
 
                     <h3 className="text-xl font-semibold text-white mb-3">📂 Docs & Tasks</h3>
-                    <ul className="list-disc pl-5 text-zinc-400 space-y-2">
-                        <li>DEXCOM_SUPPORT_EMAIL_DRAFT.md (Ready to send)</li>
-                        <li>QUICK_LINKS.md</li>
-                    </ul>
+                    <div className="space-y-3">
+                        <Link href="/project-cabinet/dexcom-email" className="block p-4 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 rounded-lg transition-colors group">
+                            <span className="text-pink-400 font-bold group-hover:underline">✉️ DEXCOM_SUPPORT_EMAIL_DRAFT.md</span>
+                            <p className="text-zinc-500 text-sm mt-1">Ready to send. Click to view copy-pasteable draft.</p>
+                        </Link>
+
+                        <Link href="/project-cabinet/quick-links" className="block p-4 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 rounded-lg transition-colors group">
+                            <span className="text-green-400 font-bold group-hover:underline">⚡️ QUICK_LINKS.md</span>
+                            <p className="text-zinc-500 text-sm mt-1">Production URLs, Local Ports, and Ops info.</p>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </main>
