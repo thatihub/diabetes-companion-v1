@@ -33,10 +33,9 @@ export default function DexcomConnect() {
                     </div>
                     <div>
                         <div className="text-zinc-200 text-sm font-medium">Dexcom G7</div>
-                        <div className="text-zinc-500 text-[10px]">Sandbox Mode</div>
+                        <div className="text-zinc-500 text-[10px]">Production</div>
                     </div>
                 </div>
-
                 <button
                     onClick={handleConnect}
                     className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs py-1.5 px-3 rounded-lg transition-colors"

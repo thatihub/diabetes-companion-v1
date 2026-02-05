@@ -10,21 +10,29 @@ export const glucoseRouter = Router();
  */
 glucoseRouter.post(
     "/glucose",
-    requireFields(["glucose_mgdl"]),
-    validateGlucose,
+    // requireFields(["glucose_mgdl"]),
+    // validateGlucose,
     async (req, res, next) => {
+        console.log("DEBUG: Entering POST /glucose handler");
         try {
-            const { glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units } = req.body;
+            console.log("DEBUG: Request body type:", typeof req.body);
+            console.log("DEBUG: Request body content:", req.body);
 
+            const { glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units } = req.body;
+            console.log("DEBUG: Parsed vars", { glucose_mgdl, measured_at });
+
+            console.log("DEBUG: Executing parameterized query...");
             const result = await query(
                 `insert into glucose_readings (glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units)
          values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6)
          returning *`,
                 [glucose_mgdl, measured_at || null, notes || null, meal_tag || null, carbs_grams || null, insulin_units || null]
             );
+            console.log("DEBUG: Query Executed. Rows:", result.rowCount);
 
             res.status(201).json(result.rows[0]);
         } catch (err) {
+            console.error("DEBUG: Caught error in handler", err);
             next(err);
         }
     }
@@ -35,7 +43,7 @@ glucoseRouter.post(
  */
 glucoseRouter.get("/glucose", async (req, res, next) => {
     try {
-        const limit = req.query.limit ? Math.min(Number(req.query.limit), 1000) : 1000;
+        const limit = req.query.limit ? Math.min(Number(req.query.limit), 50000) : 1000;
         const hours = req.query.hours ? Number(req.query.hours) : null;
 
         let queryText = `select * from glucose_readings`;

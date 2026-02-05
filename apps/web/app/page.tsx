@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import GlucoseForm from "../components/GlucoseForm";
 import GlucoseHistory from "../components/GlucoseHistory";
@@ -30,6 +31,9 @@ export default function Home() {
 
       {/* Charts */}
       <GlucoseChart refreshTrigger={refreshKey} />
+      <Link href="/trends" className="text-xs text-blue-400 hover:text-blue-300 -mt-4 mb-4">
+        View Detailed Trends →
+      </Link>
 
       {/* Integrations */}
       <DexcomConnect />

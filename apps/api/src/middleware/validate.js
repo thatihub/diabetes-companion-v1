@@ -1,5 +1,6 @@
 export function requireFields(fields) {
     return function (req, res, next) {
+        console.log("DEBUG: Middleware requireFields checking:", fields);
         const missing = [];
         for (const f of fields) {
             if (req.body?.[f] === undefined || req.body?.[f] === null || req.body?.[f] === "") {
@@ -7,8 +8,10 @@ export function requireFields(fields) {
             }
         }
         if (missing.length) {
+            console.log("DEBUG: Missing fields", missing);
             return res.status(400).json({ error: `Missing fields: ${missing.join(", ")}` });
         }
+        console.log("DEBUG: requireFields passed");
         next();
     };
 }

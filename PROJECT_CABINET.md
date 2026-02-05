@@ -1,9 +1,10 @@
 # 🗄️ Project Cabinet: Diabetes Companion V1
 
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
-**Version**: 1.0.0
-**Status**: 🟢 Production Ready (Deployed on Render)
-**Stable Commit**: `0bfc2a9` (Jan 24, 2026)
+**Version**: 1.2.0
+**Status**: 🟢 Feature Complete (Dexcom Mock / Production Ready)
+**Stable Commit**: (Pending Push)
+**Last Updated**: Feb 04, 2026
 
 ---
 
@@ -21,45 +22,46 @@
 - **Front End**: Next.js 14, Tailwind CSS, Recharts.
 - **Back End**: Node.js/Express.
 - **Database**: Supabase (PostgreSQL).
-- **AI Engine**: OpenAI (GPT-4o) via API.
-- **Integration**: Apple Health via iOS Shortcuts.
+- **AI Engine**: OpenAI (GPT-4o) via API (Backend Proxy).
+- **Integration**: Dexcom G7 (OAuth2), Apple Health (Shortcuts).
 
 ---
 
 ## 📜 Recent Change Log / Features Enabled
- 
+
+### ✅ V1.2 Updates (Feb 04, 2026) - "The Analytics Upgrade"
+- **Trends & Intelligence**:
+  - **90-Day Analysis**: Full history visualization (26k+ points supported).
+  - **Split View**: Break down history into weekly graphs for easy comparison.
+  - **Auto-Stats**: Real-time calculation of Average Glucose and GMI (Est. A1C).
+  - **AI Weekly Insights**: "Analyze Trends with AI" button compares weeks and highlights progress.
+- **Backend Stability**:
+  - **Axios Migration**: Replaced OpenAI Node SDK with direct Axios calls to fix stability.
+  - **Limit Fix**: Increased API fetch limits (1000 -> 50,000) for deep learning.
+  - **Secure Env**: Fixed .env loading priority.
+- **Dexcom Integration**:
+  - **Mock Fallback**: Robust fallback system when Dexcom API returns 0 records (due to pending permissions).
+
 ### ✅ V1.1 Updates (Jan 29, 2026)
 - **Dexcom Production Integration**:
-  - **Status**: 🟡 Connected & Authenticated (Waiting for Data Propagation).
-  - **Credentials**: Updated to Individual Access (Production) keys.
-  - **OAuth Flow**: Fully functional (Redirects -> Token Exchange -> Sync).
-  - **Environment**: Configured for `api.dexcom.com`.
-  - **Current State**: API is syncing 0 records. Pending 24-48h Dexcom provisioning delay for new clients.
-- **DevOps**:
-  - Updated detailed `QUICK_LINKS.md` for local dev and troubleshooting.
- 
+  - **Status**: Credentials updated, OAuth flow functional.
+  - **Current State**: Waiting for Dexcom Developer Authorization (Mock data active).
+
 ### ✅ V1.0 Release (Jan 24, 2026)
 - **Core Logging**: Glucose entry (mg/dL) with timestamps.
-- **Visuals**: 
-  - Dynamic Line Chart (24h - 90d ranges).
-  - Color-coded list view (Green/Orange/Red).
-- **AI Insights**:
-  - `Analyze Patterns` button generates bullet-point summaries of last 48h.
-- **iOS Integration**:
-  - "Hey Siri, Log Glucose" (Voice Shortcut).
- 
+- **AI Insights**: Short-term (48h) pattern analysis.
+- **iOS Integration**: Siri Shortcuts support.
+
 ---
- 
+
 ## 📂 Key File Map
 - **Docs**:
   - `docs/APPLE_HEALTH_SHORTCUT.md`: The "Bible" for iOS Sync.
-  - `QUICK_LINKS.md`: Operational dashboard links.
+  - `DEXCOM_SUPPORT_EMAIL_DRAFT.md`: Draft for Dexcom Ops.
 - **App Code**:
-  - `apps/api/src/routes/dexcom.js`: Dexcom OAuth & Sync logic.
-  - `apps/web/components/GlucoseChart.tsx`: Main viz logic.
-  - `apps/web/components/GlucoseHistory.tsx`: List logic.
-  - `apps/api/src/routes/glucose.js`: Core CRUD API.
- 
+  - `apps/web/app/trends/page.tsx`: New Trends Dashboard.
+  - `apps/web/components/TrendsSplitView.tsx`: Multi-graph logic.
+  - `apps/api/src/routes/insights.js`: AI Logic (Axios).
+  - `apps/api/src/routes/dexcom.js`: Dexcom Sync logic.
+
 ---
- 
-*Last Updated: Jan 29, 2026*

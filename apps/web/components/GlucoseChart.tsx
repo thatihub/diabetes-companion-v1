@@ -35,7 +35,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             setLoading(true);
             try {
                 const hours = getHours(range);
-                const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=1000`);
+                const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=10000`);
 
                 const sorted = points.reverse().map(p => ({
                     ...p,
@@ -110,7 +110,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                domain={[40, 300]}
+                                domain={['auto', 'auto']}
                                 allowDataOverflow={false}
                             />
 
