@@ -32,18 +32,16 @@ Once created, you will see:
 > Save them in your `.env` file immediately.
 
 ## 4. Sandbox vs. Production
-- **Sandbox (Default)**:
-  - Immediately available.
-  - Returns **Fake/Simulated Data** only.
-  - Good for testing if your code works.
-- **Production (Your Real Data)**:
-  - Requires "Guest Access" or "Partner Access".
-  - You must apply for **"Limited Production Access"** if you just want your own data.
-  - **Steps**:
-    1. Go to "My Apps".
-    2. Select your App.
-    3. Look for "Apply for Production Access" or "Request Limited Access".
-    4. Explain this is a "Personal Project for my own data analysis".
+- **Sandbox**:
+  - ⚠️ **WARNING**: Do NOT connect to a Sandbox user if you have "Individual Access".
+  - **Reason**: You only get **one** connection allowed. If you use it on a Sandbox test user, you might lock yourself out of connecting your real account.
+  - Only use Sandbox if you are awaiting access or purely testing for others.
+
+- **Production (Individual Access)**:
+  - **Status**: ✅ GRANTED (as of Jan 2026).
+  - **Target**: Your real Dexcom account.
+  - **Constraint**: Authenticate with your *personal* Dexcom credentials immediately.
+  - **Endpoints**: Use the Production API URLs, not Sandbox.
 
 ---
 

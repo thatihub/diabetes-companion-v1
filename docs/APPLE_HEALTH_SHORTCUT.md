@@ -96,3 +96,4 @@ Open **Shortcuts App** -> Tap **+** (Top Right) -> Name it **"Sync Latest Glucos
 ## 🛠 Troubleshooting
 - **"Missing fields: glucose_mgdl"**: You probably forgot the **"Get Numbers from Input"** step, so it sent text like "120 mg/dL".
 - **Empty Graph?**: Check `http://localhost:3001/data.html` to see raw data.
+Local Host:  http://localhost:3001

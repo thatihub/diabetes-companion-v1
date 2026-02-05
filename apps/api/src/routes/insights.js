@@ -1,107 +1,104 @@
-
 import { Router } from "express";
-import { OpenAI } from "openai";
+import axios from "axios";
 import { query } from "../db.js";
 
 export const insightsRouter = Router();
 
-// Initialize OpenAI key
-// Note: Ensure OPENAI_API_KEY is in .env 
-const apiKey = process.env.OPENAI_API_KEY;
-console.log("Insights Router Loaded. API Key present:", !!apiKey, apiKey ? `(Length: ${apiKey.length})` : "");
-if (apiKey) console.log(`API Key preview: ${apiKey.substring(0, 35)}...`);
-
-const openai = new OpenAI({
-    apiKey: apiKey || "dummy_key_to_prevent_instantiation_error", // Prevent immediate throw if missing, will fail on call
-});
+// Retrieve Key
+const rawKey = process.env.OPENAI_API_KEY || "";
+const OPENAI_API_KEY = rawKey.replace(/^"|"$/g, '').trim();
 
 /**
  * POST /api/insights/analyze
- * Analyzes glucose data.
- * Body: { startDate?, endDate?, context? }
- * - Default: Last 48 hours
- * - context: "comparative" | "weekly" | "general" (influences the system prompt)
+ * Body: { range: "48h" | "7d" | "14d" | "90d" }
  */
-insightsRouter.post("/analyze", async (req, res, next) => {
-    console.log("POST /api/insights/analyze received", req.body);
+insightsRouter.post("/analyze", async (req, res) => {
+    const range = req.body.range || "48h";
+    console.log(`[AI] Analysis requested for range: ${range}`);
+
     try {
-        if (!process.env.OPENAI_API_KEY) {
-            console.error("Missing OPENAI_API_KEY");
-            return res.status(500).json({ error: "Server Configuration Error: Missing OpenAI API Key" });
-        }
+        let promptData = "";
+        let sysPrompt = "";
 
-        const { startDate, endDate, context } = req.body;
-        let readings;
-
-        // 1. Fetch data based on range or default
-        if (startDate && endDate) {
-            console.log(`Fetching data from ${startDate} to ${endDate}...`);
-            const result = await query(
-                `select * from glucose_readings 
-                 where measured_at >= $1 and measured_at <= $2
-                 order by measured_at desc`,
-                [startDate, endDate]
-            );
-            readings = result.rows;
-        } else {
-            console.log("Fetching default recent data (48h)...");
+        if (range === "48h" || range === "24h") {
+            // DETAILED MODE (Raw Logs)
             const result = await query(
                 `select * from glucose_readings 
                  where measured_at > now() - interval '48 hours'
-                 order by measured_at desc`
+                 order by measured_at desc limit 150`
             );
-            readings = result.rows;
-        }
+            const readings = result.rows;
+            if (readings.length < 3) return res.json({ analysis: "Insufficient data." });
 
-        console.log(`Fetched ${readings.length} readings.`);
+            promptData = readings.map(r =>
+                `- ${new Date(r.measured_at).toLocaleString()}: ${r.glucose_mgdl} mg/dL`
+            ).join("\n");
 
-        // 2. Prepare prompt
-        if (readings.length < 3) {
-            console.log("Not enough data.");
-            return res.json({ analysis: "Not enough data in this range to analyze. Please log more readings!" });
-        }
+            sysPrompt = `Analyze these raw glucose logs (last 48h). Identify immediate patterns (spikes, drops). Format as bullet points.`;
 
-        const formattedData = readings.map(r =>
-            `- ${new Date(r.measured_at).toLocaleString()}: ${r.glucose_mgdl} mg/dL, Carbs: ${r.carbs_grams || 0}g, Insulin: ${r.insulin_units || 0}u ${r.meal_tag ? `(${r.meal_tag})` : ''}`
-        ).join("\n");
-
-        let systemInstruction = "You are a helpful, encouraging diabetes assistant.";
-        if (context === "weekly") {
-            systemInstruction += " Analyze this specific week of data. Identify patterns relative to a typical week. Focus on overall stability and key events.";
-        } else if (context === "comparison") {
-            systemInstruction += " Analyze these weeks of data to identify broad trends. Compare patterns across the weeks if obvious (e.g. 'Last week was more stable').";
         } else {
-            systemInstruction += " Analyze these glucose logs from the recent period.";
+            // TREND MODE (Weekly Aggregation)
+            // Determine days
+            const days = range === "90d" ? 90 : range === "30d" ? 30 : range === "14d" ? 14 : 7;
+
+            // Query Weekly Stats
+            const result = await query(`
+                SELECT 
+                    date_trunc('week', measured_at) as week_start,
+                    COUNT(*) as count,
+                    ROUND(AVG(glucose_mgdl)) as avg_glucose,
+                    ROUND(STDDEV(glucose_mgdl)) as variability,
+                    MIN(glucose_mgdl) as min_val,
+                    MAX(glucose_mgdl) as max_val
+                FROM glucose_readings
+                WHERE measured_at > now() - interval '${days} days'
+                GROUP BY 1
+                ORDER BY 1 DESC
+            `);
+
+            const weeks = result.rows;
+            if (weeks.length === 0) return res.json({ analysis: "Insufficient data for trend analysis." });
+
+            promptData = weeks.map(w =>
+                `Week of ${new Date(w.week_start).toLocaleDateString()}: Avg ${w.avg_glucose}, Var ${w.variability}, Min ${w.min_val}, Max ${w.max_val} (Readings: ${w.count})`
+            ).join("\n");
+
+            sysPrompt = `
+            You are a diabetes expert. Compare these weekly glucose statistics for the last ${range}.
+            Identify if control is improving or worsening. Look for changes in variability (Standard Deviation) or Average.
+            Highlight specific weeks that look best/worst.
+            Format as concise bullet points '•'.
+            `;
         }
 
+        if (!OPENAI_API_KEY || OPENAI_API_KEY.length < 10) throw new Error("Missing API Key");
 
-        const prompt = `
-        ${systemInstruction}
-        Identify 2-3 key patterns (e.g., overnight trends, response to carbs, pre-meal spikes).
-        Format your response as a clean bulleted list (use '•').
-        Keep each point concise (1 sentence). Be encouraging.
-        Start directly with the first bullet.
-        
-        Data:
-        ${formattedData}
-        `;
+        console.log("[AI] calling OpenAI with aggregated/raw data...");
 
-        // 3. Call GPT-4o
-        console.log("Calling OpenAI...");
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: prompt }],
-            max_tokens: 200, // Increased slightly for potentially complex comparison
-        });
-        console.log("OpenAI response received.");
+        const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                model: "gpt-4o",
+                messages: [
+                    { role: "system", content: sysPrompt },
+                    { role: "user", content: `Data:\n${promptData}` }
+                ],
+                max_tokens: 300
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`
+                },
+                timeout: 15000
+            }
+        );
 
-        const analysis = completion.choices[0].message.content;
-
+        const analysis = response.data.choices[0].message.content;
         res.json({ analysis });
 
     } catch (err) {
-        console.error("AI Error:", err);
-        // Return actual error for debugging
-        res.status(500).json({ error: err.message || "Failed to generate insights" });
+        console.error("AI Error:", err.message);
+        res.status(200).json({ analysis: `• ⚠️ AI Error: ${err.message}` });
     }
 });

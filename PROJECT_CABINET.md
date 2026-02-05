@@ -1,9 +1,10 @@
 # 🗄️ Project Cabinet: Diabetes Companion V1
 
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
-**Version**: 1.1.0
-**Status**: 🟢 Production Ready (Deployed on Render)
-**Stable Commit**: `8834e71` (Jan 25, 2026)
+**Version**: 1.2.0
+**Status**: 🟢 Feature Complete (Dexcom Mock / Production Ready)
+**Stable Commit**: `3108777` (Feb 04, 2026)
+**Last Updated**: Feb 04, 2026
 
 ---
 
@@ -21,54 +22,46 @@
 - **Front End**: Next.js 14, Tailwind CSS, Recharts.
 - **Back End**: Node.js/Express.
 - **Database**: Supabase (PostgreSQL).
-- **AI Engine**: OpenAI (GPT-4o) via API.
-- **Integration**: Apple Health via iOS Shortcuts.
+- **AI Engine**: OpenAI (GPT-4o) via API (Backend Proxy).
+- **Integration**: Dexcom G7 (OAuth2), Apple Health (Shortcuts).
 
 ---
 
 ## 📜 Recent Change Log / Features Enabled
 
-### ✅ V1.1 Feature Update (Jan 25, 2026) - Trends & Analysis [`8834e71`]
-- **New Trends Page**: Dedicated `/trends` view with stacked weekly graphs.
-- **Weekly Comparison**:
-  - Vertical/Grid layout for 7d, 14d, 30d, and 90d ranges.
-  - Interactive charts (click to enlarge).
-- **Advanced AI Insights**:
-  - **Context-Aware**: Analyzes broad trends across multiple weeks.
-  - **Drill-Down**: "Analyze This Week" button inside individual weekly popups for targeted advice.
-- **Refactored Architecture**:
-  - Created reusable `BaseGlucoseChart` component.
-  - Env variable fix for reliable API key loading.
+### ✅ V1.2 Updates (Feb 04, 2026) - "The Analytics Upgrade"
+- **Trends & Intelligence**:
+  - **90-Day Analysis**: Full history visualization (26k+ points supported).
+  - **Split View**: Break down history into weekly graphs for easy comparison.
+  - **Auto-Stats**: Real-time calculation of Average Glucose and GMI (Est. A1C).
+  - **AI Weekly Insights**: "Analyze Trends with AI" button compares weeks and highlights progress.
+- **Backend Stability**:
+  - **Axios Migration**: Replaced OpenAI Node SDK with direct Axios calls to fix stability.
+  - **Limit Fix**: Increased API fetch limits (1000 -> 50,000) for deep learning.
+  - **Secure Env**: Fixed .env loading priority.
+- **Dexcom Integration**:
+  - **Mock Fallback**: Robust fallback system when Dexcom API returns 0 records (due to pending permissions).
 
-### ✅ V1.0 Release [`0bfc2a9`]
+### ✅ V1.1 Updates (Jan 29, 2026)
+- **Dexcom Production Integration**:
+  - **Status**: Credentials updated, OAuth flow functional.
+  - **Current State**: Waiting for Dexcom Developer Authorization (Mock data active).
+
+### ✅ V1.0 Release (Jan 24, 2026)
 - **Core Logging**: Glucose entry (mg/dL) with timestamps.
-- **Visuals**: 
-  - Dynamic Line Chart (24h - 90d ranges).
-  - Color-coded list view (Green/Orange/Red).
-- **AI Insights**:
-  - `Analyze Patterns` button generates summaries.
-- **iOS Integration**:
-  - "Hey Siri, Log Glucose" (Voice Shortcut).
-  - "Sync Latest Glucose" (Automated HealthKit Sync).
+- **AI Insights**: Short-term (48h) pattern analysis.
+- **iOS Integration**: Siri Shortcuts support.
 
 ---
 
 ## 📂 Key File Map
 - **Docs**:
   - `docs/APPLE_HEALTH_SHORTCUT.md`: The "Bible" for iOS Sync.
-  - `QUICK_LINKS.md`: Operational dashboard links.
+  - `DEXCOM_SUPPORT_EMAIL_DRAFT.md`: Draft for Dexcom Ops.
 - **App Code**:
-  - `apps/web/app/trends/page.tsx`: **NEW** Trends dashboard.
-  - `apps/web/components/BaseGlucoseChart.tsx`: **NEW** Shared reusable chart.
-  - `apps/web/components/GlucoseChart.tsx`: Main dashboard chart.
-  - `apps/web/components/InsightCard.tsx`: AI Analysis UI component.
-  - `apps/api/src/routes/insights.js`: Enhanced AI Prompt logic (Context aware).
-  - `apps/api/src/env.js`: Environment override fix.
-
-## 🌿 Experimental Branches
-- **`feature/dexcom-integration`**: Contains V2 OAuth code for direct Dexcom API connection.
-  - To view/work on this: `git checkout feature/dexcom-integration`
+  - `apps/web/app/trends/page.tsx`: New Trends Dashboard.
+  - `apps/web/components/TrendsSplitView.tsx`: Multi-graph logic.
+  - `apps/api/src/routes/insights.js`: AI Logic (Axios).
+  - `apps/api/src/routes/dexcom.js`: Dexcom Sync logic.
 
 ---
-
-*Last Updated: Jan 25, 2026*

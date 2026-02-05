@@ -11,32 +11,53 @@ These are live on the internet. Note that **Render Free Tier logs sleep after 15
 
 ---
 
-## 💻 Local Development
-These only work when running `start_dc_web` and `start_dc_api` on your Mac.
+## 💻 Local Development (Reliable URLs)
+Use `127.0.0.1` to avoid network timeouts on Mac.
 
-- **Web Dashboard**: [http://localhost:3001](http://localhost:3001)
-- **Data Table Viewer**: [http://localhost:3001/data.html](http://localhost:3001/data.html)
-- **Raw API JSON**: [http://localhost:4000/api/glucose?hours=168](http://localhost:4000/api/glucose?hours=168)
+- **Web Dashboard**: [http://127.0.0.1:3001](http://127.0.0.1:3001)
+- **API Server Root**: [http://127.0.0.1:4000](http://127.0.0.1:4000)
+- **Raw API JSON**: [http://127.0.0.1:4000/api/glucose?hours=168](http://127.0.0.1:4000/api/glucose?hours=168)
 
 ---
 
-## 🛠 Troubleshooting & Operations
+## 🩸 Dexcom G7 Integration
 
-### 💤 "Network Connection Lost" / Server Sleeping
-If your Shortcut fails after a few hours of no use:
-1. Click the **[API Health Check](https://diabetes-companion-api.onrender.com)** link.
-2. Wait until it loads "Diabetes Companion API is running."
-3. Run the Shortcut again.
+### 🔗 Connect / Re-Authenticate
+Click this to start the OAuth flow with Dexcom:
+👉 **[Authorize Dexcom (Production/Sandbox)](http://127.0.0.1:4000/api/dexcom/login)**
+
+### ⚙️ Switching Environments
+To switch between **Real Data** and **Test Data**:
+1. Open `apps/api/.env`
+2. Toggle the `DEXCOM_BASE_URL` lines:
+   ```bash
+   # FOR REAL DATA:
+   DEXCOM_BASE_URL=https://api.dexcom.com
+
+   # FOR TEST DATA (Use Username 'User7' / Password 'Password1'):
+   # DEXCOM_BASE_URL=https://sandbox-api.dexcom.com
+   ```
+3. Restart API: `npm run start:api`
+
+### ⚠️ Troubleshooting "0 Readings Fetched"
+If you connect successfully but see **0 readings**:
+1. **New App Provisioning**: It takes **24-48 hours** for Dexcom to enable data streaming for a newly created Client ID.
+2. **Check Clarity**: Ensure your G7 app is uploading data to Dexcom Clarity.
+3. **Ghost Login**: If stuck on "Sandbox" login screen, open the Auth Link in **Incognito Mode**.
+
+---
+
+## 🛠 Operations
 
 ### 🔄 Restart Local Servers
-If localhost is broken, run these aliases in your terminal:
-- `start_dc_api` (Restarts API on port 4000)
-- `start_dc_web` (Restarts Web on port 3001)
+Run these commands in the project root:
+- **API Only**: `npm run start:api`
+- **Web Only**: `npm run dev:web`
+- **Both**: `npm run dev` (Note: API may restart loop with --watch, use `start:api` for stability)
 
 ### 📂 Database
 Data is stored in **Supabase**.
-- Use the **[Data Table Viewer](http://localhost:3001/data.html)** to verify entries.
-- To delete an entry, hover over it in the Web Dashboard list and click **(×)**.
+- To clear all simulated data: `node apps/api/clear-db.js`
 
 ---
 
