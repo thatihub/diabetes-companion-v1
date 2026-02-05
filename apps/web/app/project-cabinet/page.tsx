@@ -16,7 +16,7 @@ export default function ProjectCabinetPage() {
                     <ul className="list-disc pl-5 text-zinc-400 space-y-2 mb-6">
                         <li><strong>Status:</strong> 🟢 Feature Complete (Dexcom Mock / Production Ready)</li>
                         <li><strong>Last Updated:</strong> Feb 04, 2026</li>
-                        <li><strong>Stable Commit:</strong> (Pending Push)</li>
+                        <li><strong>Stable Commit:</strong> <code className="bg-zinc-800 px-1 rounded text-purple-400">3108777</code></li>
                     </ul>
 
                     <h3 className="text-xl font-semibold text-white mb-3">🚀 Key Links</h3>
