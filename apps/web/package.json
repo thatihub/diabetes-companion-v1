@@ -1,9 +1,9 @@
 {
   "name": "diabetes-companion-v1",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 3001 -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
