@@ -17,6 +17,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const [data, setData] = useState<GlucosePoint[]>([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState<Range>(initialRange);
+    const [isMounted, setIsMounted] = useState(false);
 
     const getHours = (r: Range) => {
         switch (r) {
@@ -29,6 +30,10 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             default: return 24;
         }
     };
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -74,7 +79,9 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                 </div>
             </div>
 
-            {loading && data.length === 0 ? (
+            {!isMounted ? (
+                <div className="h-48 flex items-center justify-center text-zinc-600 text-xs">Loading Chart...</div>
+            ) : loading && data.length === 0 ? (
                 <div className="h-48 flex items-center justify-center text-zinc-600 text-xs">Loading Chart...</div>
             ) : data.length < 2 ? (
                 <div className="h-48 flex items-center justify-center text-zinc-600 text-xs bg-zinc-900/50 rounded-lg">

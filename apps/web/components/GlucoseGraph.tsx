@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 
 type GlucosePoint = {
@@ -18,6 +19,21 @@ type GlucoseGraphProps = {
 };
 
 export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraphProps) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return (
+            <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 60 }}>
+                {title && <h3 className="absolute top-4 left-4 text-zinc-400 text-sm font-medium uppercase tracking-wider">{title}</h3>}
+                Loading chart...
+            </div>
+        );
+    }
+
     if (!data || data.length === 0) {
         return (
             <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 60 }}>
