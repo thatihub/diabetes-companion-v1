@@ -1,5 +1,6 @@
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
-const API_BASE_URL = rawBaseUrl.startsWith('http') ? rawBaseUrl : `https://${rawBaseUrl}`;
+// Use relative URLs to leverage Next.js API proxy (configured in next.config.ts)
+// This avoids CORS issues and uses the server-side API_URL environment variable
+const API_BASE_URL = '';
 
 type ApiOptions = RequestInit & {
     data?: any;
@@ -21,7 +22,7 @@ async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOption
     // Ensure endpoint starts with a slash if not provided
     const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-    const response = await fetch(`${API_BASE_URL}${path}`, config);
+    const response = await fetch(`${path}`, config);
 
     if (!response.ok) {
         const errorBody = await response.text();
