@@ -7,7 +7,7 @@ import GlucoseHistory from "../components/GlucoseHistory";
 import GlucoseChart from "../components/GlucoseChart";
 import InsightCard from "../components/InsightCard";
 import DexcomConnect from "../components/DexcomConnect";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -38,7 +38,9 @@ export default function Home() {
       </div>
 
       {/* Integrations */}
-      <DexcomConnect />
+      <Suspense fallback={<div className="text-zinc-500 text-sm">Loading Dexcom integration...</div>}>
+        <DexcomConnect />
+      </Suspense>
 
       {/* AI Insights */}
       <InsightCard />
