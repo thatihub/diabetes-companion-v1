@@ -120,18 +120,19 @@ export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraph
                         dataKey="carbs_grams"
                         name="Carbs (g)"
                         fill="#fb923c"
-                        barSize={4}
-                        radius={[2, 2, 0, 0]}
-                        fillOpacity={0.8}
+                        barSize={8}
+                        radius={[4, 4, 0, 0]}
+                        fillOpacity={0.9}
                     />
 
                     <Bar
                         yAxisId="insulin"
                         dataKey="insulin_units"
                         name="Insulin (u)"
-                        fill="#8b5cf6"
-                        barSize={4}
-                        radius={[2, 2, 0, 0]}
+                        fill="#a855f7"
+                        barSize={8}
+                        radius={[4, 4, 0, 0]}
+                        fillOpacity={0.9}
                     />
                 </ComposedChart>
             </div>

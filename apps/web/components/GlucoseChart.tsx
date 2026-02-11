@@ -181,19 +181,19 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                             dataKey="carbs_grams"
                             name="Carbs (g)"
                             fill="#fb923c"
-                            barSize={4}
-                            radius={[2, 2, 0, 0]}
-                            fillOpacity={0.8}
+                            barSize={6}
+                            radius={[3, 3, 0, 0]}
+                            fillOpacity={0.9}
                         />
 
-                        {/* Insulin Bar (Purple/Blue) */}
                         <Bar
                             yAxisId="insulin"
                             dataKey="insulin_units"
                             name="Insulin (u)"
-                            fill="#8b5cf6"
-                            barSize={4}
-                            radius={[2, 2, 0, 0]}
+                            fill="#a855f7"
+                            barSize={6}
+                            radius={[3, 3, 0, 0]}
+                            fillOpacity={0.9}
                         />
 
                     </ComposedChart>

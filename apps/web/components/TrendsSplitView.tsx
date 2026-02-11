@@ -19,8 +19,8 @@ export default function TrendsSplitView() {
     const [range, setRange] = useState<Range>("7d");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [weeklyData, setWeeklyData] = useState<{ title: string, points: GlucosePoint[] }[]>([]);
-    const [stats, setStats] = useState({ avg: 0, gmi: 0 });
+    const [weeklyData, setWeeklyData] = useState<{ title: string, points: GlucosePoint[], summary?: { carbs: number, insulin: number } }[]>([]);
+    const [stats, setStats] = useState({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
 
@@ -63,12 +63,18 @@ export default function TrendsSplitView() {
                     const sum = rawPoints.reduce((acc, p) => acc + p.glucose_mgdl, 0);
                     const avg = sum / rawPoints.length;
                     const gmi = 3.31 + (0.02392 * avg);
+
+                    const totalCarbs = rawPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
+                    const totalInsulin = rawPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
+
                     setStats({
                         avg: Math.round(avg),
-                        gmi: Number(gmi.toFixed(1))
+                        gmi: Number(gmi.toFixed(1)),
+                        totalCarbs,
+                        totalInsulin
                     });
                 } else {
-                    setStats({ avg: 0, gmi: 0 });
+                    setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
                 }
 
                 // Process Data: Split into 7-day chunks
@@ -99,9 +105,14 @@ export default function TrendsSplitView() {
                             timestamp: new Date(p.measured_at).getTime()
                         }));
 
+                        // Weekly Stats
+                        const weekCarbs = chunkPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
+                        const weekInsulin = chunkPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
+
                         chunks.push({
                             title: `Week ${i + 1}: ${chunkStart.toLocaleDateString()} - ${chunkEnd.toLocaleDateString()}`,
-                            points: formatted
+                            points: formatted,
+                            summary: { carbs: weekCarbs, insulin: weekInsulin }
                         });
                     }
                 }
@@ -112,7 +123,7 @@ export default function TrendsSplitView() {
                 console.error("Failed to load trends data", err);
                 setError(err instanceof Error ? err.message : 'Failed to load data');
                 setWeeklyData([]);
-                setStats({ avg: 0, gmi: 0 });
+                setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
             } finally {
                 setLoading(false);
             }
@@ -181,37 +192,60 @@ export default function TrendsSplitView() {
                     <h3 className="text-sm text-zinc-400">GMI (Est. A1C)</h3>
                     <p className="text-2xl font-bold text-white">{stats.gmi > 0 ? stats.gmi : '--'} <span className="text-xs text-zinc-500 font-normal">%</span></p>
                 </div>
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-orange-500/30">
+                    <h3 className="text-sm text-zinc-400">Total Carbs</h3>
+                    <p className="text-2xl font-bold text-orange-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-xs text-zinc-500 font-normal">g</span></p>
+                </div>
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-purple-500/30">
+                    <h3 className="text-sm text-zinc-400">Total Insulin</h3>
+                    <p className="text-2xl font-bold text-purple-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-xs text-zinc-500 font-normal">u</span></p>
+                </div>
             </div>
 
             {/* Graphs List */}
-            {loading ? (
-                <div className="text-center text-zinc-500 py-10">Loading Trends...</div>
-            ) : error ? (
-                <div className="text-center py-10">
-                    <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6 max-w-md mx-auto">
-                        <p className="text-yellow-400 mb-4">⚠️ {error}</p>
-                        <button
-                            onClick={() => setRange(range)} // Trigger re-fetch
-                            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
-                        >
-                            Retry
-                        </button>
+            {
+                loading ? (
+                    <div className="text-center text-zinc-500 py-10">Loading Trends...</div>
+                ) : error ? (
+                    <div className="text-center py-10">
+                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6 max-w-md mx-auto">
+                            <p className="text-yellow-400 mb-4">⚠️ {error}</p>
+                            <button
+                                onClick={() => setRange(range)} // Trigger re-fetch
+                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                                Retry
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ) : weeklyData.length === 0 ? (
-                <div className="text-center text-zinc-500 py-10">No data found for this period.</div>
-            ) : (
-                <div className="space-y-6">
-                    {weeklyData.map((week, idx) => (
-                        <GlucoseGraph
-                            key={idx}
-                            data={week.points}
-                            title={week.title}
-                            height={250}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
+                ) : weeklyData.length === 0 ? (
+                    <div className="text-center text-zinc-500 py-10">No data found for this period.</div>
+                ) : (
+                    <div className="space-y-6">
+                        {weeklyData.map((week, idx) => (
+                            <div key={idx} className="relative">
+                                <div className="absolute top-4 right-4 z-20 flex gap-2">
+                                    {week.summary && (
+                                        <>
+                                            <span className="text-[10px] font-bold text-orange-400 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-800/50">
+                                                {week.summary.carbs}g Carbs
+                                            </span>
+                                            <span className="text-[10px] font-bold text-purple-400 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-800/50">
+                                                {week.summary.insulin}u Insulin
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                                <GlucoseGraph
+                                    data={week.points}
+                                    title={week.title}
+                                    height={250}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 }

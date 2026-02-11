@@ -25,29 +25,29 @@ insightsRouter.post("/analyze", async (req, res) => {
             const result = await query(
                 `select * from glucose_readings 
                  where measured_at > now() - interval '48 hours'
-                 order by measured_at desc limit 150`
+                 order by measured_at desc limit 200`
             );
             const readings = result.rows;
             if (readings.length < 3) return res.json({ analysis: "Insufficient data." });
 
             promptData = readings.map(r =>
-                `- ${new Date(r.measured_at).toLocaleString()}: ${r.glucose_mgdl} mg/dL`
+                `- ${new Date(r.measured_at).toLocaleString()}: ${r.glucose_mgdl} mg/dL${r.carbs_grams ? ` (Carbs: ${r.carbs_grams}g)` : ''}${r.insulin_units ? ` (Insulin: ${r.insulin_units}u)` : ''}${r.meal_tag ? ` [Tag: ${r.meal_tag}]` : ''}`
             ).join("\n");
 
-            sysPrompt = `Analyze these raw glucose logs (last 48h). Identify immediate patterns (spikes, drops). Format as bullet points.`;
+            sysPrompt = `Analyze these raw glucose logs (last 48h). Identify immediate patterns (spikes after meals, drops after insulin). Correlate carb intake and insulin doses with glucose outcomes. Format as bullet points with emojis.`;
 
         } else {
             // TREND MODE (Weekly Aggregation)
-            // Determine days
             const days = range === "90d" ? 90 : range === "30d" ? 30 : range === "14d" ? 14 : 7;
 
-            // Query Weekly Stats
             const result = await query(`
                 SELECT 
                     date_trunc('week', measured_at) as week_start,
                     COUNT(*) as count,
                     ROUND(AVG(glucose_mgdl)) as avg_glucose,
                     ROUND(STDDEV(glucose_mgdl)) as variability,
+                    SUM(COALESCE(carbs_grams, 0)) as total_carbs,
+                    SUM(COALESCE(insulin_units, 0)) as total_insulin,
                     MIN(glucose_mgdl) as min_val,
                     MAX(glucose_mgdl) as max_val
                 FROM glucose_readings
@@ -60,14 +60,14 @@ insightsRouter.post("/analyze", async (req, res) => {
             if (weeks.length === 0) return res.json({ analysis: "Insufficient data for trend analysis." });
 
             promptData = weeks.map(w =>
-                `Week of ${new Date(w.week_start).toLocaleDateString()}: Avg ${w.avg_glucose}, Var ${w.variability}, Min ${w.min_val}, Max ${w.max_val} (Readings: ${w.count})`
+                `Week of ${new Date(w.week_start).toLocaleDateString()}: Avg ${w.avg_glucose}mg/dL, Var ${w.variability}, Carbs ${w.total_carbs}g, Insulin ${w.total_insulin}u, Min ${w.min_val}, Max ${w.max_val} (${w.count} logs)`
             ).join("\n");
 
             sysPrompt = `
-            You are a diabetes expert. Compare these weekly glucose statistics for the last ${range}.
-            Identify if control is improving or worsening. Look for changes in variability (Standard Deviation) or Average.
-            Highlight specific weeks that look best/worst.
-            Format as concise bullet points '•'.
+            You are a diabetes expert. Use this weekly data (glucose averages, variability, total carbs, and total insulin) to analyze patterns over the last ${range}.
+            Identify if the insulin-to-carb ratio seems to be working by looking at how averages change relative to total carbs/insulin.
+            Look for changes in variability (Standard Deviation).
+            Provide actionable insights in bullet points '•'.
             `;
         }
 
