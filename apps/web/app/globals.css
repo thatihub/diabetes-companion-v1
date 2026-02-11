@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Premium Dark Theme Variables */
+  --bg-primary: #09090b;
+  --bg-secondary: #18181b;
+  --bg-tertiary: #27272a;
+
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+
+  --accent-primary: #3b82f6;
+  /* Blue-500 */
+  --accent-danger: #ef4444;
+  /* Red-500 */
+  --accent-success: #22c55e;
+  /* Green-500 */
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth Input Focus Rings */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

@@ -1,0 +1,45 @@
+services:
+  # ------------------------------------------------------------
+  # BACKEND SERVICE (API)
+  # ------------------------------------------------------------
+  - type: web
+    name: diabetes-companion-api
+    runtime: node
+    plan: free
+    region: oregon # or closer tailored region if needed
+    
+    # We build from the root regarding dependencies in a monorepo
+    buildCommand: npm install
+    startCommand: npm run start:api
+    
+    # Health check to ensure zero-downtime deploys
+    healthCheckPath: /health
+
+    # Environment variables
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PGSSLMODE
+        value: require
+      - key: DATABASE_URL
+        sync: false # You must set this in the Render Dashboard securely
+      - key: OPENAI_API_KEY
+        sync: false # You must set this in the Render Dashboard securely
+
+  # ------------------------------------------------------------
+  # FRONTEND SERVICE (WEB)
+  # ------------------------------------------------------------
+  - type: web
+    name: diabetes-companion-web
+    runtime: node
+    plan: free
+    region: oregon
+    
+    # Build the Next.js app
+    buildCommand: npm install && npm run build:web
+    startCommand: npm --workspace apps/web run start
+
+    # Environment variables
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://diabetes-companion-api.onrender.com

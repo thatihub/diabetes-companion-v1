@@ -1,0 +1,22 @@
+{
+    "name": "diabetes-companion",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Minimal Diabetes Companion backend (Node + Express + Supabase Postgres)",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "node --watch src/server.js"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "dependencies": {
+        "axios": "^1.7.9",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "openai": "^6.16.0",
+        "pg": "^8.12.0"
+    }
+}

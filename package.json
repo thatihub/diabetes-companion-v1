@@ -1,0 +1,20 @@
+{
+    "name": "diabetes-companion-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Diabetes Companion V1 - Full-stack monorepo",
+    "workspaces": [
+        "apps/*"
+    ],
+    "scripts": {
+        "dev:web": "npm --workspace apps/web run dev",
+        "dev:api": "npm --workspace apps/api run dev",
+        "dev": "npm run dev:api & npm run dev:web",
+        "build:web": "npm --workspace apps/web run build",
+        "start:api": "npm --workspace apps/api run start",
+        "install:all": "npm install && npm --workspace apps/web install && npm --workspace apps/api install"
+    },
+    "engines": {
+        "node": ">=20"
+    }
+}
