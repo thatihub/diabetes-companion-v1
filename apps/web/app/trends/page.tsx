@@ -5,7 +5,7 @@ import TrendsSplitView from "../../components/TrendsSplitView";
 
 export default function TrendsPage() {
     return (
-        <main className="flex min-h-screen flex-col items-center p-6 space-y-8">
+        <main className="flex min-h-screen flex-col items-center p-6 pt-12 space-y-8">
             <div className="w-full text-left space-y-4">
                 <Link
                     href="/"
