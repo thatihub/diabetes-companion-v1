@@ -176,12 +176,27 @@ export default function TrendsSplitView() {
             {analysis && (
                 <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 p-6 rounded-xl mb-8 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <h3 className="text-indigo-200 font-bold mb-3 flex items-center gap-2">
-                        <span className="text-xl">🤖</span> AI Trend Analysis ({range})
+                    <h3 className="text-indigo-200 font-bold mb-3 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">🤖</span> AI Trend Analysis ({range})
+                        </div>
+                        <button
+                            onClick={() => setAnalysis(null)}
+                            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                            aria-label="Close"
+                        >
+                            <span className="text-lg">×</span>
+                        </button>
                     </h3>
-                    <div className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    <div className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap mb-4">
                         {analysis}
                     </div>
+                    <button
+                        onClick={() => setAnalysis(null)}
+                        className="text-[10px] text-white/40 hover:text-white/70 uppercase tracking-widest font-bold w-full text-center py-2 border-t border-white/5"
+                    >
+                        Dismiss Analysis
+                    </button>
                 </div>
             )}
 
