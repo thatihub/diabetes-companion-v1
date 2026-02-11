@@ -9,9 +9,56 @@ const rawKey = process.env.OPENAI_API_KEY || "";
 const OPENAI_API_KEY = rawKey.replace(/^"|"$/g, '').trim();
 
 /**
- * POST /api/insights/analyze
- * Body: { range: "48h" | "7d" | "14d" | "90d" }
+ * POST /api/insights/analyze-week
+ * Body: { title: string, data: [] }
  */
+insightsRouter.post("/analyze-week", async (req, res) => {
+    const { title, data } = req.body;
+    if (!data || data.length === 0) return res.json({ analysis: "No data provided." });
+
+    try {
+        const promptData = data.map(r =>
+            `- ${r.time}: ${r.glucose_mgdl} mg/dL${r.carbs_grams ? ` (Carbs: ${r.carbs_grams}g)` : ''}${r.insulin_units ? ` (Insulin: ${r.insulin_units}u)` : ''}`
+        ).slice(-300).join("\n"); // Limit to last 300 points for context
+
+        const sysPrompt = `
+        Analyze this single week of diabetes data (${title}).
+        Focus on identifying specific times of day where control is strongest or weakest.
+        Correlate carb intake and insulin doses with glucose outcomes.
+        Provide 3-4 very concise, actionable bullet points with emojis.
+        Keep the tone professional and encouraging.
+        `;
+
+        if (!OPENAI_API_KEY || OPENAI_API_KEY.length < 10) throw new Error("Missing API Key");
+
+        const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                model: "gpt-4o",
+                messages: [
+                    { role: "system", content: sysPrompt },
+                    { role: "user", content: `Weekly Data:\n${promptData}` }
+                ],
+                max_tokens: 300
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`
+                },
+                timeout: 15000
+            }
+        );
+
+        const analysis = response.data.choices[0].message.content;
+        res.json({ analysis });
+
+    } catch (err) {
+        console.error("AI Week Error:", err.message);
+        res.status(200).json({ analysis: `• ⚠️ AI Error: ${err.message}` });
+    }
+});
+
 insightsRouter.post("/analyze", async (req, res) => {
     const range = req.body.range || "48h";
     console.log(`[AI] Analysis requested for range: ${range}`);

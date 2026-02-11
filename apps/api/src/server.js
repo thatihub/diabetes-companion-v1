@@ -40,8 +40,8 @@ process.on('unhandledRejection', (reason, promise) => {
         console.log(`🔗 Web-to-API Rewrite Target Base: ${process.env.API_URL.substring(0, 20)}...`);
     }
 
-    // Parse JSON
-    app.use(express.json());
+    // Parse JSON with larger limit for trend data
+    app.use(express.json({ limit: '1mb' }));
 
     // CORS — Allow All Origins (for now)
     app.use(cors());

@@ -24,6 +24,13 @@ export default function TrendsSplitView() {
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<{ title: string, points: GlucosePoint[], summary?: { carbs: number, insulin: number } } | null>(null);
+    const [weekAnalysis, setWeekAnalysis] = useState<string | null>(null);
+    const [analyzingWeek, setAnalyzingWeek] = useState(false);
+
+    // Reset week analysis when switching weeks
+    useEffect(() => {
+        setWeekAnalysis(null);
+    }, [selectedWeek]);
 
     const ranges: Range[] = ["7d", "14d", "30d", "90d"];
 
@@ -37,6 +44,23 @@ export default function TrendsSplitView() {
             setAnalysis("Failed to generate insights.");
         } finally {
             setAnalyzing(false);
+        }
+    };
+
+    const handleAnalyzeWeek = async () => {
+        if (!selectedWeek) return;
+        setAnalyzingWeek(true);
+        setWeekAnalysis(null);
+        try {
+            const res = await api.post<{ analysis: string }>("/api/insights/analyze-week", {
+                title: selectedWeek.title,
+                data: selectedWeek.points
+            });
+            setWeekAnalysis(res.analysis);
+        } catch (e) {
+            setWeekAnalysis("Failed to generate weekly insights.");
+        } finally {
+            setAnalyzingWeek(false);
         }
     };
 
@@ -282,7 +306,7 @@ export default function TrendsSplitView() {
                             <span className="text-xl">×</span>
                         </button>
 
-                        <div className="flex-1 overflow-y-auto overflow-hidden no-scrollbar">
+                        <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
                             <GlucoseGraph
                                 data={selectedWeek.points}
                                 title={`${selectedWeek.title} — Detailed Analysis`}
@@ -290,7 +314,37 @@ export default function TrendsSplitView() {
                                 height={450} // Much larger height for the popup
                             />
 
-                            <div className="mt-4 p-4 bg-zinc-800/30 rounded-2xl border border-zinc-800">
+                            <div className="mt-8 flex justify-center sticky top-0 z-20">
+                                <button
+                                    onClick={handleAnalyzeWeek}
+                                    disabled={analyzingWeek}
+                                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-2xl hover:opacity-90 shadow-lg shadow-purple-500/20 transition-all disabled:opacity-50"
+                                >
+                                    {analyzingWeek ? (
+                                        <>
+                                            <span className="animate-spin text-lg">✨</span> Analyzing Patterns...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-lg">✨</span> Analyze Patterns for this Week
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {weekAnalysis && (
+                                <div className="mt-8 bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+                                    <h4 className="text-indigo-200 font-bold mb-4 flex items-center gap-2">
+                                        <span className="text-xl">🤖</span> AI Weekly Insight
+                                    </h4>
+                                    <div className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                        {weekAnalysis}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="mt-8 p-6 bg-zinc-800/30 rounded-2xl border border-zinc-800">
                                 <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Analysis Hint</h4>
                                 <p className="text-zinc-400 text-sm leading-relaxed">
                                     Use the horizontal axis to identify multi-day patterns. The orange bars represent carbohydrate intake (g) and purple bars represent insulin doses (u).
@@ -299,10 +353,10 @@ export default function TrendsSplitView() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-center">
+                        <div className="mt-6 flex justify-center border-t border-zinc-800 pt-6">
                             <button
                                 onClick={() => setSelectedWeek(null)}
-                                className="px-6 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-sm font-bold transition-colors"
+                                className="px-8 py-3 bg-zinc-800 text-zinc-400 hover:text-white rounded-2xl text-sm font-bold transition-all hover:bg-zinc-700"
                             >
                                 Close Detailed View
                             </button>
