@@ -67,11 +67,16 @@ export default function TrendsSplitView() {
                     const totalCarbs = rawPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
                     const totalInsulin = rawPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
 
+                    // Daily Averages
+                    const daysInPeriod = totalHours / 24;
+                    const avgDailyCarbs = totalCarbs / daysInPeriod;
+                    const avgDailyInsulin = totalInsulin / daysInPeriod;
+
                     setStats({
                         avg: Math.round(avg),
                         gmi: Number(gmi.toFixed(1)),
-                        totalCarbs: Number(totalCarbs.toFixed(1)),
-                        totalInsulin: Number(totalInsulin.toFixed(1))
+                        totalCarbs: Number(avgDailyCarbs.toFixed(1)),
+                        totalInsulin: Number(avgDailyInsulin.toFixed(1))
                     });
                 } else {
                     setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
@@ -105,7 +110,7 @@ export default function TrendsSplitView() {
                             timestamp: new Date(p.measured_at).getTime()
                         }));
 
-                        // Weekly Stats
+                        // Weekly Daily Averages
                         const weekCarbs = chunkPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
                         const weekInsulin = chunkPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
 
@@ -113,8 +118,8 @@ export default function TrendsSplitView() {
                             title: `Week ${i + 1}: ${chunkStart.toLocaleDateString()} - ${chunkEnd.toLocaleDateString()}`,
                             points: formatted,
                             summary: {
-                                carbs: Number(weekCarbs.toFixed(1)),
-                                insulin: Number(weekInsulin.toFixed(1))
+                                carbs: Number((weekCarbs / 7).toFixed(1)),
+                                insulin: Number((weekInsulin / 7).toFixed(1))
                             }
                         });
                     }
@@ -211,12 +216,12 @@ export default function TrendsSplitView() {
                     <p className="text-2xl font-bold text-white">{stats.gmi > 0 ? stats.gmi : '--'} <span className="text-xs text-zinc-500 font-normal">%</span></p>
                 </div>
                 <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-orange-500/30">
-                    <h3 className="text-sm text-zinc-400">Total Carbs</h3>
-                    <p className="text-2xl font-bold text-orange-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-xs text-zinc-500 font-normal">g</span></p>
+                    <h3 className="text-sm text-zinc-400">Avg Daily Carbs</h3>
+                    <p className="text-2xl font-bold text-orange-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-xs text-zinc-500 font-normal">g/day</span></p>
                 </div>
                 <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-purple-500/30">
-                    <h3 className="text-sm text-zinc-400">Total Insulin</h3>
-                    <p className="text-2xl font-bold text-purple-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-xs text-zinc-500 font-normal">u</span></p>
+                    <h3 className="text-sm text-zinc-400">Avg Daily Insulin</h3>
+                    <p className="text-2xl font-bold text-purple-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-xs text-zinc-500 font-normal">u/day</span></p>
                 </div>
             </div>
 
@@ -246,10 +251,10 @@ export default function TrendsSplitView() {
                                     {week.summary && (
                                         <>
                                             <span className="text-[10px] font-bold text-orange-400 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-800/50">
-                                                {week.summary.carbs}g Carbs
+                                                Avg {week.summary.carbs}g/day
                                             </span>
                                             <span className="text-[10px] font-bold text-purple-400 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-800/50">
-                                                {week.summary.insulin}u Insulin
+                                                Avg {week.summary.insulin}u/day
                                             </span>
                                         </>
                                     )}
