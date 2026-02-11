@@ -70,8 +70,8 @@ export default function TrendsSplitView() {
                     setStats({
                         avg: Math.round(avg),
                         gmi: Number(gmi.toFixed(1)),
-                        totalCarbs,
-                        totalInsulin
+                        totalCarbs: Number(totalCarbs.toFixed(1)),
+                        totalInsulin: Number(totalInsulin.toFixed(1))
                     });
                 } else {
                     setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
@@ -112,7 +112,10 @@ export default function TrendsSplitView() {
                         chunks.push({
                             title: `Week ${i + 1}: ${chunkStart.toLocaleDateString()} - ${chunkEnd.toLocaleDateString()}`,
                             points: formatted,
-                            summary: { carbs: weekCarbs, insulin: weekInsulin }
+                            summary: {
+                                carbs: Number(weekCarbs.toFixed(1)),
+                                insulin: Number(weekInsulin.toFixed(1))
+                            }
                         });
                     }
                 }
