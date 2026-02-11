@@ -4,173 +4,166 @@ import Link from "next/link";
 import { useState } from "react";
 
 const COMMITS = [
+    { hash: "b00fb77", date: "2026-02-11", message: "UI: Major redesign of Trends and Analysis views (v1.2.4)" },
+    { hash: "c579b88", date: "2026-02-11", message: "UI: Final fixes for Back button reliability and chart distinctness" },
+    { hash: "9df7a12", date: "2026-02-11", message: "Feature: Add specialized AI analysis for specific weeks" },
     { hash: "d0a1c13", date: "2026-02-10", message: "docs: update Project Cabinet status to v1.2.1 and redesign UI" },
     { hash: "64add38", date: "2026-02-09", message: "fix: resolve build issues and api proxy config for production" },
-    { hash: "8ea3fd7", date: "2026-02-07", message: "fix: robust error handling for 502 errors and backend cold starts" },
-    { hash: "8bcd3a7", date: "2026-02-07", message: "fix: CORS issue by using Next.js API proxy instead of direct backend calls" },
-    { hash: "9ac8c34", date: "2026-02-07", message: "fix: Recharts rendering by removing ResponsiveContainer" },
-    { hash: "3b65f76", date: "2026-02-06", message: "fix: Recharts SSR rendering issue by adding client-side mount check" },
 ];
 
 export default function ProjectCabinetPage() {
     const [showHistory, setShowHistory] = useState(false);
 
     return (
-        <main className="min-h-screen bg-black text-zinc-100 p-6 md:p-12 font-sans">
-            <div className="max-w-6xl mx-auto space-y-12">
+        <main className="min-h-screen bg-[#020202] text-zinc-100 p-6 md:p-12 font-sans selection:bg-indigo-500/30">
+            <div className="max-w-5xl mx-auto space-y-16">
 
                 {/* Header Section */}
-                <header className="space-y-4 border-b border-zinc-800 pb-8">
-                    <Link href="/" className="inline-flex items-center text-sm text-zinc-500 hover:text-blue-400 transition-colors mb-2">
+                <header className="space-y-6 pt-10">
+                    <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-all shadow-xl">
                         ← Back to Dashboard
                     </Link>
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <div>
-                            <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Project Cabinet</span>
+                            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-4">
+                                Project <span className="text-indigo-500">Cabinet</span>
                             </h1>
-                            <p className="text-zinc-400 text-lg">Diabetes Companion V1</p>
+                            <p className="text-zinc-500 text-xl font-medium max-w-lg leading-relaxed">
+                                Diabetes Companion V1 — Technical documentation and system status.
+                            </p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">
-                                🟢 Production Ready
-                            </span>
-                            <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">
-                                v1.2.1
-                            </span>
+                        <div className="flex flex-col items-end gap-3">
+                            <div className="flex gap-2">
+                                <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 shadow-[0_0_15px_-5px_#10b981]">
+                                    🟢 Active
+                                </span>
+                                <span className="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                                    v1.2.4
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em]">Last Build</p>
+                                <p className="text-sm font-black text-zinc-400">Feb 11, 2026 — <code className="text-indigo-400 font-mono">b00fb77</code></p>
+                            </div>
                         </div>
                     </div>
                 </header>
 
-                {/* Status Cards - Adjusted Grid for Better Responsiveness */}
-                <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="bg-zinc-900/30 border border-zinc-800/50 p-6 rounded-2xl backdrop-blur-sm h-full">
-                        <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-4">Current Build</h3>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-zinc-400">Commit</span>
-                                <code className="bg-zinc-800 px-2 py-0.5 rounded text-purple-300 font-mono">d0a1c13</code>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-zinc-400">Deployed</span>
-                                <span className="text-white">Feb 10, 2026</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-zinc-900/30 border border-zinc-800/50 p-6 rounded-2xl backdrop-blur-sm lg:col-span-2 h-full">
-                        <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-4">Quick Links</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <a href="https://diabetes-companion-web.onrender.com" target="_blank" className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/40 hover:bg-blue-500/10 hover:border-blue-500/30 border border-transparent transition-all group">
-                                <span className="text-sm font-medium text-zinc-300 group-hover:text-blue-400 truncate pr-2">Web App (Prod)</span>
-                                <span className="text-zinc-600 group-hover:text-blue-400 flex-none">↗</span>
-                            </a>
-                            <a href="https://diabetes-companion-api.onrender.com" target="_blank" className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/40 hover:bg-purple-500/10 hover:border-purple-500/30 border border-transparent transition-all group">
-                                <span className="text-sm font-medium text-zinc-300 group-hover:text-purple-400 truncate pr-2">API Endpoint</span>
-                                <span className="text-zinc-600 group-hover:text-purple-400 flex-none">↗</span>
-                            </a>
-                            <a href="https://github.com/thatihub/diabetes-companion-v1" target="_blank" className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/40 hover:bg-gray-500/10 hover:border-gray-500/30 border border-transparent transition-all group sm:col-span-2 md:col-span-1">
-                                <span className="text-sm font-medium text-zinc-300 group-hover:text-white truncate pr-2">GitHub Repo</span>
-                                <span className="text-zinc-600 group-hover:text-white flex-none">↗</span>
-                            </a>
-                        </div>
-                    </div>
+                {/* Core Repository Links */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="https://diabetes-companion-web.onrender.com" target="_blank" className="p-6 bg-zinc-900/30 border border-zinc-900 hover:border-indigo-500/30 rounded-3xl transition-all group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">↗</div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Web Application</h4>
+                        <p className="text-white font-bold text-lg">Live Frontend</p>
+                    </a>
+                    <a href="https://diabetes-companion-api.onrender.com" target="_blank" className="p-6 bg-zinc-900/30 border border-zinc-900 hover:border-emerald-500/30 rounded-3xl transition-all group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">↗</div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">API Service</h4>
+                        <p className="text-white font-bold text-lg">Backend Engine</p>
+                    </a>
+                    <a href="https://github.com/thatihub/diabetes-companion-v1" target="_blank" className="p-6 bg-zinc-900/30 border border-zinc-900 hover:border-white/20 rounded-3xl transition-all group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">↗</div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Source Code</h4>
+                        <p className="text-white font-bold text-lg">GitHub Repo</p>
+                    </a>
                 </section>
 
-                {/* Documentation & Tasks */}
-                <section>
-                    <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                        <span>📂</span> Project Documents
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Link href="/project-cabinet/dexcom-email" className="group relative overflow-hidden p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 hover:border-pink-500/50 transition-all">
-                            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <h3 className="text-lg font-bold text-pink-400 mb-2 group-hover:text-pink-300">Dexcom Support Email</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">
-                                Draft template for contacting Dexcom operations regarding API access and production keys.
-                            </p>
-                        </Link>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    {/* Documentation & Tasks */}
+                    <section className="space-y-8">
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-sm border border-zinc-800">📂</span>
+                            System Assets
+                        </h2>
+                        <div className="space-y-4">
+                            <Link href="/project-cabinet/dexcom-email" className="block group p-6 rounded-3xl bg-zinc-900/20 border border-zinc-900 hover:border-indigo-500/30 transition-all">
+                                <h3 className="text-lg font-black text-white mb-2 group-hover:text-indigo-400 transition-colors">Dexcom Support Email</h3>
+                                <p className="text-zinc-500 text-sm leading-relaxed">
+                                    Ready-to-use template for production key requests and developer operations.
+                                </p>
+                            </Link>
 
-                        <Link href="/project-cabinet/quick-links" className="group relative overflow-hidden p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 hover:border-green-500/50 transition-all">
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <h3 className="text-lg font-bold text-green-400 mb-2 group-hover:text-green-300">Quick Reference</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">
-                                Central hub for all production URLs, local ports, database credentials (safe), and ops commands.
-                            </p>
-                        </Link>
-                    </div>
-                </section>
+                            <Link href="/project-cabinet/quick-links" className="block group p-6 rounded-3xl bg-zinc-900/20 border border-zinc-900 hover:border-emerald-500/30 transition-all">
+                                <h3 className="text-lg font-black text-white mb-2 group-hover:text-emerald-400 transition-colors">Quick Reference</h3>
+                                <p className="text-zinc-500 text-sm leading-relaxed">
+                                    Central manifest for database credentials, environment variables, and dev commands.
+                                </p>
+                            </Link>
+                        </div>
+                    </section>
 
-                {/* Change Log Preview */}
-                <section className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-8">
-                    <h2 className="text-lg font-bold text-white mb-6">Latest Updates (v1.2.1)</h2>
-                    <div className="space-y-4">
-                        <div className="flex gap-4">
-                            <div className="flex-none pt-1">
-                                <div className="w-2 h-2 rounded-full bg-blue-500 ring-4 ring-blue-500/10" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-zinc-200">Critical Stability Fixes</h4>
-                                <p className="text-sm text-zinc-500 mt-1">Resolved deployment pipeline issues, configured API proxying for production, and seeded the production database with initial data.</p>
+                    {/* Change Log Preview */}
+                    <section className="space-y-8">
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-sm border border-zinc-800">✨</span>
+                            Latest Refinements
+                        </h2>
+                        <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-8 space-y-6 relative overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />
+
+                            <div className="relative space-y-4">
+                                <div className="space-y-1">
+                                    <h4 className="text-base font-black text-white">V1.2.4: The UI Revision</h4>
+                                    <ul className="text-sm text-zinc-500 space-y-2 list-disc pl-5">
+                                        <li>Redesigned Trends page with anti-clutter spacing.</li>
+                                        <li>High-contrast Emerald (Carbs) vs Rose (Insulin) chart theme.</li>
+                                        <li>Premium enlarged graph popups with centered AI analysis.</li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-1 pt-4 border-t border-zinc-900">
+                                    <h4 className="text-base font-black text-zinc-400">V1.2.1: Deployment Hardening</h4>
+                                    <p className="text-sm text-zinc-600">Fixed Render build pipeline and API proxy routing issues.</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex gap-4">
-                            <div className="flex-none pt-1">
-                                <div className="w-2 h-2 rounded-full bg-purple-500 ring-4 ring-purple-500/10" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-zinc-200">Merged Dexcom Integration</h4>
-                                <p className="text-sm text-zinc-500 mt-1">Feature branch merged. OAuth flow is ready for production keys.</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
                 {/* Git History (Collapsible) */}
-                <section className="pt-4 border-t border-zinc-800/50">
+                <section className="pt-10 border-t border-zinc-900">
                     <button
                         onClick={() => setShowHistory(!showHistory)}
-                        className="w-full flex items-center justify-between p-4 bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-800 rounded-xl transition-all group"
+                        className="w-full flex items-center justify-between py-6 group"
                     >
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <line x1="12" y1="5" x2="12" y2="9"></line>
-                                    <line x1="12" y1="15" x2="12" y2="19"></line>
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl text-zinc-500 group-hover:text-white group-hover:border-zinc-700 transition-all">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 2v8l3.5 3.5"></path>
+                                    <circle cx="12" cy="12" r="10"></circle>
                                 </svg>
                             </div>
                             <div className="text-left">
-                                <h3 className="text-sm font-bold text-zinc-200 group-hover:text-white">Git Commit History</h3>
-                                <p className="text-xs text-zinc-500">View recent changes and feature merges</p>
+                                <h3 className="text-xl font-black text-zinc-300 group-hover:text-white transition-colors">Git Commit Trace</h3>
+                                <p className="text-sm font-medium text-zinc-600">Explore the granular evolution of the codebase</p>
                             </div>
                         </div>
-                        <span className={`text-zinc-500 transition-transform duration-300 ${showHistory ? 'rotate-180' : ''}`}>
-                            ▼
+                        <span className={`text-zinc-700 text-3xl transition-transform duration-500 font-light ${showHistory ? 'rotate-180 text-white' : ''}`}>
+                            ↓
                         </span>
                     </button>
 
                     {showHistory && (
-                        <div className="mt-4 pl-4 border-l-2 border-zinc-800 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                            {COMMITS.map((commit, i) => (
-                                <div key={commit.hash} className="relative">
-                                    <div className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-zinc-800 border-2 border-black ring-2 ring-zinc-800/50" />
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2">
-                                            <code className="text-xs font-mono text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">{commit.hash}</code>
-                                            <span className="text-xs text-zinc-500">{commit.date}</span>
+                        <div className="mt-8 space-y-6 animate-in fade-in slide-in-from-top-8 duration-700 ease-out pb-20">
+                            {COMMITS.map((commit) => (
+                                <div key={commit.hash} className="group relative pl-8 border-l border-zinc-900 pb-8 last:pb-0">
+                                    <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-zinc-900 border border-zinc-800 group-hover:bg-indigo-500 group-hover:border-indigo-400 transition-all duration-300" />
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <code className="text-[10px] font-black font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">{commit.hash}</code>
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-700">{commit.date}</span>
                                         </div>
-                                        <p className="text-sm text-zinc-300">{commit.message}</p>
+                                        <p className="text-zinc-400 text-sm font-medium leading-relaxed group-hover:text-zinc-200 transition-colors">{commit.message}</p>
                                     </div>
                                 </div>
                             ))}
-                            <div className="pt-2 text-center">
+                            <div className="pt-8 text-center">
                                 <a
                                     href="https://github.com/thatihub/diabetes-companion-v1/commits/main"
                                     target="_blank"
-                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                                    className="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
                                 >
-                                    View full history on GitHub →
+                                    Full GitHub History Source
                                 </a>
                             </div>
                         </div>

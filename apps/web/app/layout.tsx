@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Using Inter for a clean, modern look
 import "./globals.css";
+// Build Timestamp: 2026-02-11T11:29:00Z
 
 const inter = Inter({
   subsets: ["latin"],
