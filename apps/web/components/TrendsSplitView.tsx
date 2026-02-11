@@ -298,67 +298,92 @@ export default function TrendsSplitView() {
                     ></div>
 
                     {/* Modal Content */}
-                    <div className="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-[32px] p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                        <button
-                            onClick={() => setSelectedWeek(null)}
-                            className="absolute top-6 right-6 z-10 p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-full transition-colors"
-                        >
-                            <span className="text-xl">×</span>
-                        </button>
+                    <div className="relative w-full max-w-5xl bg-zinc-950 border border-zinc-800 rounded-[40px] p-8 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden max-h-[95vh] flex flex-col">
 
-                        <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
-                            <GlucoseGraph
-                                data={selectedWeek.points}
-                                title={`${selectedWeek.title} — Detailed Analysis`}
-                                summary={selectedWeek.summary}
-                                height={450} // Much larger height for the popup
-                            />
+                        {/* Modal Header - Large & Distinct */}
+                        <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-8 border-b border-zinc-800 pb-8">
+                            <div className="space-y-2">
+                                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                                    {selectedWeek.title.split(' (')[0]}
+                                    <span className="block text-lg font-medium text-zinc-500 mt-1 tracking-normal italic">
+                                        Detailed Analysis — {selectedWeek.title.split(' (')[1]?.replace(')', '')}
+                                    </span>
+                                </h2>
 
-                            <div className="mt-8 flex justify-center sticky top-0 z-20">
                                 <button
                                     onClick={handleAnalyzeWeek}
                                     disabled={analyzingWeek}
-                                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-2xl hover:opacity-90 shadow-lg shadow-purple-500/20 transition-all disabled:opacity-50"
+                                    className="mt-4 flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                                 >
                                     {analyzingWeek ? (
                                         <>
-                                            <span className="animate-spin text-lg">✨</span> Analyzing Patterns...
+                                            <span className="animate-spin text-lg">✨</span> Analyzing...
                                         </>
                                     ) : (
                                         <>
-                                            <span className="text-lg">✨</span> Analyze Patterns for this Week
+                                            <span className="text-lg">✨</span> Run AI Pattern Analysis
                                         </>
                                     )}
                                 </button>
                             </div>
 
+                            {selectedWeek.summary && (
+                                <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+                                    <div className="bg-orange-500/10 border border-orange-500/20 p-5 rounded-3xl min-w-[140px] text-right">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-500/60 block mb-1">Daily Avg Carbs</span>
+                                        <span className="text-3xl font-black text-orange-400">{selectedWeek.summary.carbs}g</span>
+                                    </div>
+                                    <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-3xl min-w-[140px] text-right">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-purple-500/60 block mb-1">Daily Avg Insulin</span>
+                                        <span className="text-3xl font-black text-purple-400">{selectedWeek.summary.insulin}u</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => setSelectedWeek(null)}
+                                className="absolute top-8 right-8 p-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-white rounded-full transition-all border border-zinc-800"
+                            >
+                                <span className="text-2xl leading-none">×</span>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto no-scrollbar pr-2">
+                            {/* Pass title as empty string to hide the internal header of GlucoseGraph */}
+                            <GlucoseGraph
+                                data={selectedWeek.points}
+                                title=""
+                                height={500}
+                            />
+
                             {weekAnalysis && (
-                                <div className="mt-8 bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-2xl relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-                                    <h4 className="text-indigo-200 font-bold mb-4 flex items-center gap-2">
-                                        <span className="text-xl">🤖</span> AI Weekly Insight
+                                <div className="mt-8 bg-zinc-900/50 border border-indigo-500/30 p-8 rounded-[32px] relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-2 h-full bg-indigo-600"></div>
+                                    <h4 className="text-indigo-200 text-xl font-black mb-4 flex items-center gap-3">
+                                        <span className="text-2xl">🤖</span> AI Diagnosis
                                     </h4>
-                                    <div className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                    <div className="text-zinc-300 text-base leading-relaxed whitespace-pre-wrap">
                                         {weekAnalysis}
                                     </div>
                                 </div>
                             )}
 
-                            <div className="mt-8 p-6 bg-zinc-800/30 rounded-2xl border border-zinc-800">
-                                <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Analysis Hint</h4>
-                                <p className="text-zinc-400 text-sm leading-relaxed">
-                                    Use the horizontal axis to identify multi-day patterns. The orange bars represent carbohydrate intake (g) and purple bars represent insulin doses (u).
-                                    A tighter glucose line (blue) indicates better stability during this period.
+                            <div className="mt-8 p-6 bg-zinc-900/40 rounded-[24px] border border-zinc-800 opacity-60">
+                                <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] mb-3">Interpretation Guide</h4>
+                                <p className="text-zinc-500 text-xs leading-relaxed">
+                                    This chart visualizes the last 7 days of your glucose journey. The blue area denotes your range,
+                                    while the orange and purple bars show external inputs. Use the AI Diagnosis button above to
+                                    uncover hidden patterns in your data.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-center border-t border-zinc-800 pt-6">
+                        <div className="mt-8 flex justify-center border-t border-zinc-900 pt-6">
                             <button
                                 onClick={() => setSelectedWeek(null)}
-                                className="px-8 py-3 bg-zinc-800 text-zinc-400 hover:text-white rounded-2xl text-sm font-bold transition-all hover:bg-zinc-700"
+                                className="px-12 py-4 bg-zinc-900 text-zinc-400 hover:text-white rounded-2xl text-sm font-black tracking-widest uppercase transition-all hover:bg-zinc-800"
                             >
-                                Close Detailed View
+                                Back to Trends
                             </button>
                         </div>
                     </div>
