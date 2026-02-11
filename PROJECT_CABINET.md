@@ -1,10 +1,10 @@
 # 🗄️ Project Cabinet: Diabetes Companion V1
 
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
-**Version**: 1.2.1
-**Status**: 🟢 Production Ready (Dexcom Integration Merged)
-**Stable Commit**: `64add38` (Feb 10, 2026)
-**Last Updated**: Feb 10, 2026
+**Version**: 1.2.4
+**Status**: 🟢 Production Ready (UI & Analysis Refined)
+**Stable Commit**: `b00fb77` (Feb 11, 2026)
+**Last Updated**: Feb 11, 2026
 
 ---
 
@@ -28,6 +28,18 @@
 ---
 
 ## 📜 Recent Change Log / Features Enabled
+
+### ✅ V1.2.4: The UI & Analysis Refinement (Feb 11, 2026)
+- **Trends UI Overhaul**:
+  - **Redesigned Page**: Cleaned up the Trends page for a premium, anti-clutter look.
+  - **Navigation**: Added a prominent "Back to Dashboard" button for seamless flow.
+  - **Enlarged Graph Popups**: Click any weekly chart to open a full-depth, 500px high analysis window.
+- **High-Contrast Visualization**:
+  - **Color Distinction**: Switched Carbs to **Emerald Green** (#10b981) and Insulin to **Rose Red** (#f43f5e) for instant recognition.
+  - **Geometry Distinction**: Carbs use thick bars; Insulin uses thin "needle-like" pillars to prevent visual overlapping.
+- **Detailed AI Intelligence**:
+  - **Weekly Pattern Analysis**: New "Analyze Patterns" button inside the popup for specialized 7-day diagnostics.
+  - **Backend Fixes**: Increased API JSON limit (1MB) to handle high-density weekly data transfers.
 
 ### ✅ V1.2.1 Hotfix (Feb 10, 2026) - "Production Stability"
 - **Critical Fixes**:
