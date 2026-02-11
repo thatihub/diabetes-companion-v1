@@ -23,6 +23,7 @@ export default function TrendsSplitView() {
     const [stats, setStats] = useState({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
+    const [selectedWeek, setSelectedWeek] = useState<{ title: string, points: GlucosePoint[], summary?: { carbs: number, insulin: number } } | null>(null);
 
     const ranges: Range[] = ["7d", "14d", "30d", "90d"];
 
@@ -246,17 +247,69 @@ export default function TrendsSplitView() {
                 ) : (
                     <div className="space-y-6">
                         {weeklyData.map((week, idx) => (
-                            <GlucoseGraph
+                            <div
                                 key={idx}
-                                data={week.points}
-                                title={week.title}
-                                summary={week.summary}
-                                height={250}
-                            />
+                                onClick={() => setSelectedWeek(week)}
+                                className="cursor-pointer hover:scale-[1.01] transition-transform active:scale-100"
+                            >
+                                <GlucoseGraph
+                                    data={week.points}
+                                    title={week.title}
+                                    summary={week.summary}
+                                    height={250}
+                                />
+                            </div>
                         ))}
                     </div>
                 )
             }
+
+            {/* Enlarged Modal Popup */}
+            {selectedWeek && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        onClick={() => setSelectedWeek(null)}
+                    ></div>
+
+                    {/* Modal Content */}
+                    <div className="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-[32px] p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                        <button
+                            onClick={() => setSelectedWeek(null)}
+                            className="absolute top-6 right-6 z-10 p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-full transition-colors"
+                        >
+                            <span className="text-xl">×</span>
+                        </button>
+
+                        <div className="flex-1 overflow-y-auto overflow-hidden no-scrollbar">
+                            <GlucoseGraph
+                                data={selectedWeek.points}
+                                title={`${selectedWeek.title} — Detailed Analysis`}
+                                summary={selectedWeek.summary}
+                                height={450} // Much larger height for the popup
+                            />
+
+                            <div className="mt-4 p-4 bg-zinc-800/30 rounded-2xl border border-zinc-800">
+                                <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Analysis Hint</h4>
+                                <p className="text-zinc-400 text-sm leading-relaxed">
+                                    Use the horizontal axis to identify multi-day patterns. The orange bars represent carbohydrate intake (g) and purple bars represent insulin doses (u).
+                                    A tighter glucose line (blue) indicates better stability during this period.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-center">
+                            <button
+                                onClick={() => setSelectedWeek(null)}
+                                className="px-6 py-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-xl text-sm font-bold transition-colors"
+                            >
+                                Close Detailed View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }
