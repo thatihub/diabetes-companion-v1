@@ -115,7 +115,7 @@ export default function TrendsSplitView() {
                         const weekInsulin = chunkPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
 
                         chunks.push({
-                            title: `Week ${i + 1}: ${chunkStart.toLocaleDateString()} - ${chunkEnd.toLocaleDateString()}`,
+                            title: `Week ${i + 1} (${chunkStart.toLocaleDateString([], { month: 'short', day: 'numeric' })} - ${chunkEnd.toLocaleDateString([], { month: 'short', day: 'numeric' })})`,
                             points: formatted,
                             summary: {
                                 carbs: Number((weekCarbs / 7).toFixed(1)),
@@ -246,25 +246,13 @@ export default function TrendsSplitView() {
                 ) : (
                     <div className="space-y-6">
                         {weeklyData.map((week, idx) => (
-                            <div key={idx} className="relative">
-                                <div className="absolute top-4 right-4 z-20 flex gap-2">
-                                    {week.summary && (
-                                        <>
-                                            <span className="text-[10px] font-bold text-orange-400 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-800/50">
-                                                Avg {week.summary.carbs}g/day
-                                            </span>
-                                            <span className="text-[10px] font-bold text-purple-400 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-800/50">
-                                                Avg {week.summary.insulin}u/day
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                                <GlucoseGraph
-                                    data={week.points}
-                                    title={week.title}
-                                    height={250}
-                                />
-                            </div>
+                            <GlucoseGraph
+                                key={idx}
+                                data={week.points}
+                                title={week.title}
+                                summary={week.summary}
+                                height={250}
+                            />
                         ))}
                     </div>
                 )

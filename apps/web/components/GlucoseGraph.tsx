@@ -16,9 +16,10 @@ type GlucoseGraphProps = {
     data: GlucosePoint[];
     height?: number;
     title?: string;
+    summary?: { carbs: number; insulin: number };
 };
 
-export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraphProps) {
+export default function GlucoseGraph({ data, height = 200, title, summary }: GlucoseGraphProps) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -27,7 +28,7 @@ export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraph
 
     if (!isMounted) {
         return (
-            <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 60 }}>
+            <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 80 }}>
                 {title && <h3 className="absolute top-4 left-4 text-zinc-400 text-sm font-medium uppercase tracking-wider">{title}</h3>}
                 Loading chart...
             </div>
@@ -36,7 +37,7 @@ export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraph
 
     if (!data || data.length === 0) {
         return (
-            <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 60 }}>
+            <div className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 flex items-center justify-center text-zinc-600 text-xs`} style={{ height: height + 80 }}>
                 {title && <h3 className="absolute top-4 left-4 text-zinc-400 text-sm font-medium uppercase tracking-wider">{title}</h3>}
                 No data available
             </div>
@@ -44,12 +45,22 @@ export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraph
     }
 
     return (
-        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6 relative">
-            {title && (
-                <div className="absolute top-4 left-4 z-10">
-                    <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">{title}</h3>
-                </div>
-            )}
+        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+                {title && (
+                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{title}</h3>
+                )}
+                {summary && (
+                    <div className="flex gap-2">
+                        <span className="text-[9px] font-bold text-orange-400 bg-orange-900/20 px-2 py-0.5 rounded border border-orange-800/30 whitespace-nowrap">
+                            Avg {summary.carbs}g/day
+                        </span>
+                        <span className="text-[9px] font-bold text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded border border-purple-800/30 whitespace-nowrap">
+                            Avg {summary.insulin}u/day
+                        </span>
+                    </div>
+                )}
+            </div>
 
             <div className="w-full -ml-4" style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%">
