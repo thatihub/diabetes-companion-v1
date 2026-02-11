@@ -18,7 +18,7 @@ export default function Home() {
       {/* Hero Section */}
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tighter text-white">
-          Diabetes <span className="text-blue-500">Companion V1.2.1</span>
+          Diabetes <span className="text-blue-500">Companion V1.2.3</span>
         </h1>
         <p className="text-zinc-500 text-sm">
           Track your levels, gain insights.
