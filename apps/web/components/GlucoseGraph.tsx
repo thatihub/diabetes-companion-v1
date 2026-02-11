@@ -52,89 +52,91 @@ export default function GlucoseGraph({ data, height = 200, title }: GlucoseGraph
             )}
 
             <div className="w-full -ml-4" style={{ height }}>
-                <ComposedChart data={data} width={350} height={height} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                    <defs>
-                        <linearGradient id="colorGlucose" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="colorGlucose" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
 
-                    <XAxis
-                        dataKey="time"
-                        stroke="#52525b"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        minTickGap={30}
-                    />
+                        <XAxis
+                            dataKey="time"
+                            stroke="#52525b"
+                            fontSize={10}
+                            tickLine={false}
+                            axisLine={false}
+                            minTickGap={80}
+                        />
 
-                    <YAxis
-                        yAxisId="glucose"
-                        hide={false}
-                        stroke="#52525b"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        domain={['auto', 'auto']}
-                    />
+                        <YAxis
+                            yAxisId="glucose"
+                            hide={false}
+                            stroke="#52525b"
+                            fontSize={10}
+                            tickLine={false}
+                            axisLine={false}
+                            domain={['auto', 'auto']}
+                        />
 
-                    {/* Carbs Axis: scaled 0-200g so normal meals (50g) are ~25% height */}
-                    <YAxis
-                        yAxisId="carbs"
-                        orientation="right"
-                        hide={true}
-                        domain={[0, 200]}
-                    />
+                        {/* Carbs Axis: scaled 0-200g so normal meals (50g) are ~25% height */}
+                        <YAxis
+                            yAxisId="carbs"
+                            orientation="right"
+                            hide={true}
+                            domain={[0, 200]}
+                        />
 
-                    {/* Insulin Axis: scaled 0-30u so normal doses (5u) are ~16% height */}
-                    <YAxis
-                        yAxisId="insulin"
-                        orientation="right"
-                        hide={true}
-                        domain={[0, 30]}
-                    />
+                        {/* Insulin Axis: scaled 0-30u so normal doses (5u) are ~16% height */}
+                        <YAxis
+                            yAxisId="insulin"
+                            orientation="right"
+                            hide={true}
+                            domain={[0, 30]}
+                        />
 
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
-                        itemStyle={{ color: '#fff' }}
-                    />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
+                            itemStyle={{ color: '#fff' }}
+                        />
 
-                    <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" />
-                    <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" />
+                        <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" />
+                        <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" />
 
-                    <Area
-                        yAxisId="glucose"
-                        type="monotone"
-                        dataKey="glucose_mgdl"
-                        name="Glucose"
-                        stroke="#3b82f6"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorGlucose)"
-                    />
+                        <Area
+                            yAxisId="glucose"
+                            type="monotone"
+                            dataKey="glucose_mgdl"
+                            name="Glucose"
+                            stroke="#3b82f6"
+                            strokeWidth={3}
+                            fillOpacity={1}
+                            fill="url(#colorGlucose)"
+                        />
 
-                    <Bar
-                        yAxisId="carbs"
-                        dataKey="carbs_grams"
-                        name="Carbs (g)"
-                        fill="#fb923c"
-                        barSize={8}
-                        radius={[4, 4, 0, 0]}
-                        fillOpacity={0.9}
-                    />
+                        <Bar
+                            yAxisId="carbs"
+                            dataKey="carbs_grams"
+                            name="Carbs (g)"
+                            fill="#fb923c"
+                            barSize={8}
+                            radius={[4, 4, 0, 0]}
+                            fillOpacity={0.9}
+                        />
 
-                    <Bar
-                        yAxisId="insulin"
-                        dataKey="insulin_units"
-                        name="Insulin (u)"
-                        fill="#a855f7"
-                        barSize={8}
-                        radius={[4, 4, 0, 0]}
-                        fillOpacity={0.9}
-                    />
-                </ComposedChart>
+                        <Bar
+                            yAxisId="insulin"
+                            dataKey="insulin_units"
+                            name="Insulin (u)"
+                            fill="#a855f7"
+                            barSize={8}
+                            radius={[4, 4, 0, 0]}
+                            fillOpacity={0.9}
+                        />
+                    </ComposedChart>
+                </ResponsiveContainer>
             </div>
         </div >
     );

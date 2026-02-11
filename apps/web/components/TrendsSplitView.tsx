@@ -101,7 +101,7 @@ export default function TrendsSplitView() {
                             ...p,
                             insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
                             carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
-                            time: new Date(p.measured_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                            time: new Date(p.measured_at).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                             timestamp: new Date(p.measured_at).getTime()
                         }));
 
