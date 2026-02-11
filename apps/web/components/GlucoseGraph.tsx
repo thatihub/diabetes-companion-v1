@@ -57,13 +57,13 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                     {summary && (
                         <div className="flex gap-2">
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-bold text-orange-500/80 uppercase tracking-tighter">Daily Avg Carbs</span>
-                                <span className="text-sm font-bold text-orange-400">{summary.carbs}g</span>
+                                <span className="text-[9px] font-bold text-emerald-500/80 uppercase tracking-tighter">Daily Avg Carbs</span>
+                                <span className="text-sm font-bold text-emerald-400">{summary.carbs}g</span>
                             </div>
                             <div className="w-px h-8 bg-zinc-800 mx-1"></div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-bold text-purple-500/80 uppercase tracking-tighter">Daily Avg Insulin</span>
-                                <span className="text-sm font-bold text-purple-400">{summary.insulin}u</span>
+                                <span className="text-[9px] font-bold text-rose-500/80 uppercase tracking-tighter">Daily Avg Insulin</span>
+                                <span className="text-sm font-bold text-rose-400">{summary.insulin}u</span>
                             </div>
                         </div>
                     )}
@@ -101,7 +101,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                             padding={{ top: 40, bottom: 10 }}
                         />
 
-                        {/* Carbs Axis: scaled 0-200g so normal meals (50g) are ~25% height */}
+                        {/* Carbs Axis */}
                         <YAxis
                             yAxisId="carbs"
                             orientation="right"
@@ -109,7 +109,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                             domain={[0, 200]}
                         />
 
-                        {/* Insulin Axis: scaled 0-30u so normal doses (5u) are ~16% height */}
+                        {/* Insulin Axis */}
                         <YAxis
                             yAxisId="insulin"
                             orientation="right"
@@ -154,26 +154,26 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                             animationDuration={1000}
                         />
 
-                        {/* Carbs - Distinct Orange Bars */}
+                        {/* Carbs - Emerald Green Bars */}
                         <Bar
                             yAxisId="carbs"
                             dataKey="carbs_grams"
                             name="Carbs"
-                            fill="#f97316"
+                            fill="#10b981"
                             barSize={14}
                             radius={[6, 6, 0, 0]}
                             fillOpacity={0.8}
                         />
 
-                        {/* Insulin - Using a Different Style (Thin Bar with Border) to be Distinct */}
+                        {/* Insulin - Rose Red Pillars */}
                         <Bar
                             yAxisId="insulin"
                             dataKey="insulin_units"
                             name="Insulin"
-                            fill="#a855f7"
+                            fill="#f43f5e"
                             barSize={6}
                             radius={[10, 10, 0, 0]}
-                            stroke="#d8b4fe"
+                            stroke="#fda4af"
                             strokeWidth={1}
                             fillOpacity={0.9}
                         />

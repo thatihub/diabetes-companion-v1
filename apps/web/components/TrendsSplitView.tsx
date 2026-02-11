@@ -240,13 +240,13 @@ export default function TrendsSplitView() {
                     <h3 className="text-sm text-zinc-400">GMI (Est. A1C)</h3>
                     <p className="text-2xl font-bold text-white">{stats.gmi > 0 ? stats.gmi : '--'} <span className="text-xs text-zinc-500 font-normal">%</span></p>
                 </div>
-                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-orange-500/30">
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-emerald-500/30">
                     <h3 className="text-sm text-zinc-400">Avg Daily Carbs</h3>
-                    <p className="text-2xl font-bold text-orange-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-xs text-zinc-500 font-normal">g/day</span></p>
+                    <p className="text-2xl font-bold text-emerald-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-xs text-zinc-500 font-normal">g/day</span></p>
                 </div>
-                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-purple-500/30">
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-t-rose-500/30">
                     <h3 className="text-sm text-zinc-400">Avg Daily Insulin</h3>
-                    <p className="text-2xl font-bold text-purple-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-xs text-zinc-500 font-normal">u/day</span></p>
+                    <p className="text-2xl font-bold text-rose-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-xs text-zinc-500 font-normal">u/day</span></p>
                 </div>
             </div>
 
@@ -331,13 +331,13 @@ export default function TrendsSplitView() {
 
                             {selectedWeek.summary && (
                                 <div className="grid grid-cols-2 gap-3 flex-1 justify-end">
-                                    <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-2xl min-w-[110px] text-center ml-auto">
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-orange-500/60 block">Avg Carbs</span>
-                                        <span className="text-xl font-black text-orange-400">{selectedWeek.summary.carbs}g</span>
+                                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl min-w-[110px] text-center ml-auto">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500/60 block">Avg Carbs</span>
+                                        <span className="text-xl font-black text-emerald-400">{selectedWeek.summary.carbs}g</span>
                                     </div>
-                                    <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl min-w-[110px] text-center">
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-purple-500/60 block">Avg Insulin</span>
-                                        <span className="text-xl font-black text-purple-400">{selectedWeek.summary.insulin}u</span>
+                                    <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl min-w-[110px] text-center">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-rose-500/60 block">Avg Insulin</span>
+                                        <span className="text-xl font-black text-rose-400">{selectedWeek.summary.insulin}u</span>
                                     </div>
                                 </div>
                             )}
