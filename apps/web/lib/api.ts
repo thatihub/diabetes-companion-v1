@@ -70,8 +70,8 @@ async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOption
             }
         } else {
             // Include a snippet of the HTML/Text body for debugging
-            const snippet = errorBody.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 200);
-            finalMessage = `${finalMessage} ${response.statusText} - ${snippet}`;
+            const snippet = errorBody.substring(0, 300);
+            finalMessage = `${finalMessage} - ${snippet}`;
         }
 
         throw new Error(finalMessage);
