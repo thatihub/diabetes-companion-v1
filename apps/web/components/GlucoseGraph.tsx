@@ -47,26 +47,28 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
     return (
         <div className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-2xl mb-8 overflow-hidden">
             {/* Header Area */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8 px-1">
-                <div className="space-y-1">
-                    {title && (
-                        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{title}</h3>
+            {(title || summary) && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8 px-1">
+                    <div className="space-y-1">
+                        {title && (
+                            <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{title}</h3>
+                        )}
+                    </div>
+                    {summary && (
+                        <div className="flex gap-2">
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-bold text-orange-500/80 uppercase tracking-tighter">Daily Avg Carbs</span>
+                                <span className="text-sm font-bold text-orange-400">{summary.carbs}g</span>
+                            </div>
+                            <div className="w-px h-8 bg-zinc-800 mx-1"></div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-bold text-purple-500/80 uppercase tracking-tighter">Daily Avg Insulin</span>
+                                <span className="text-sm font-bold text-purple-400">{summary.insulin}u</span>
+                            </div>
+                        </div>
                     )}
                 </div>
-                {summary && (
-                    <div className="flex gap-2">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[9px] font-bold text-orange-500/80 uppercase tracking-tighter">Daily Avg Carbs</span>
-                            <span className="text-sm font-bold text-orange-400">{summary.carbs}g</span>
-                        </div>
-                        <div className="w-px h-8 bg-zinc-800 mx-1"></div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-[9px] font-bold text-purple-500/80 uppercase tracking-tighter">Daily Avg Insulin</span>
-                            <span className="text-sm font-bold text-purple-400">{summary.insulin}u</span>
-                        </div>
-                    </div>
-                )}
-            </div>
+            )}
 
             <div className="w-full -ml-4" style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -116,41 +118,63 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                         />
 
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
-                            itemStyle={{ color: '#fff' }}
+                            content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    return (
+                                        <div className="bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-4 rounded-2xl shadow-2xl space-y-2">
+                                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-2">{label}</p>
+                                            {payload.map((p, i) => (
+                                                <div key={i} className="flex items-center justify-between gap-6">
+                                                    <span className="text-xs font-medium text-zinc-400">{p.name}</span>
+                                                    <span className="text-xs font-black" style={{ color: p.color }}>
+                                                        {p.value}{p.name.includes('Glucose') ? ' mg/dL' : p.name.includes('Carbs') ? 'g' : 'u'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
 
-                        <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" />
-                        <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" />
+                        <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+                        <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" opacity={0.5} />
 
+                        {/* Glucose Trend - Main Area */}
                         <Area
                             yAxisId="glucose"
                             type="monotone"
                             dataKey="glucose_mgdl"
                             name="Glucose"
                             stroke="#3b82f6"
-                            strokeWidth={3}
+                            strokeWidth={4}
                             fillOpacity={1}
                             fill="url(#colorGlucose)"
+                            animationDuration={1000}
                         />
 
+                        {/* Carbs - Distinct Orange Bars */}
                         <Bar
                             yAxisId="carbs"
                             dataKey="carbs_grams"
-                            name="Carbs (g)"
-                            fill="#fb923c"
-                            barSize={8}
-                            radius={[4, 4, 0, 0]}
-                            fillOpacity={0.9}
+                            name="Carbs"
+                            fill="#f97316"
+                            barSize={14}
+                            radius={[6, 6, 0, 0]}
+                            fillOpacity={0.8}
                         />
 
+                        {/* Insulin - Using a Different Style (Thin Bar with Border) to be Distinct */}
                         <Bar
                             yAxisId="insulin"
                             dataKey="insulin_units"
-                            name="Insulin (u)"
+                            name="Insulin"
                             fill="#a855f7"
-                            barSize={8}
-                            radius={[4, 4, 0, 0]}
+                            barSize={6}
+                            radius={[10, 10, 0, 0]}
+                            stroke="#d8b4fe"
+                            strokeWidth={1}
                             fillOpacity={0.9}
                         />
                     </ComposedChart>
