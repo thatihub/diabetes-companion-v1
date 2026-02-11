@@ -5,11 +5,11 @@ import TrendsSplitView from "../../components/TrendsSplitView";
 
 export default function TrendsPage() {
     return (
-        <main className="flex min-h-screen flex-col items-center p-6 pt-12 space-y-8">
-            <div className="w-full text-left space-y-6">
+        <main className="flex min-h-screen flex-col items-center p-6 pt-24 space-y-12">
+            <div className="w-full text-left space-y-6 z-10">
                 <Link
                     href="/"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-xl text-zinc-300 hover:text-white transition-all text-xs font-bold uppercase tracking-widest shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-2xl text-zinc-300 hover:text-white transition-all text-xs font-black uppercase tracking-widest shadow-2xl relative z-20"
                 >
                     <span>←</span> Dashboard
                 </Link>

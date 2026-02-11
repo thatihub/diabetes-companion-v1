@@ -127,7 +127,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                                                 <div key={i} className="flex items-center justify-between gap-6">
                                                     <span className="text-xs font-medium text-zinc-400">{p.name}</span>
                                                     <span className="text-xs font-black" style={{ color: p.color }}>
-                                                        {p.value}{p.name.includes('Glucose') ? ' mg/dL' : p.name.includes('Carbs') ? 'g' : 'u'}
+                                                        {p.value}{String(p.name || '').includes('Glucose') ? ' mg/dL' : String(p.name || '').includes('Carbs') ? 'g' : 'u'}
                                                     </span>
                                                 </div>
                                             ))}
