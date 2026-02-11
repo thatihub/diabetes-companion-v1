@@ -45,26 +45,32 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
     }
 
     return (
-        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
-                {title && (
-                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{title}</h3>
-                )}
+        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-2xl mb-8 overflow-hidden">
+            {/* Header Area */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8 px-1">
+                <div className="space-y-1">
+                    {title && (
+                        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{title}</h3>
+                    )}
+                </div>
                 {summary && (
                     <div className="flex gap-2">
-                        <span className="text-[9px] font-bold text-orange-400 bg-orange-900/20 px-2 py-0.5 rounded border border-orange-800/30 whitespace-nowrap">
-                            Avg {summary.carbs}g/day
-                        </span>
-                        <span className="text-[9px] font-bold text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded border border-purple-800/30 whitespace-nowrap">
-                            Avg {summary.insulin}u/day
-                        </span>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[9px] font-bold text-orange-500/80 uppercase tracking-tighter">Daily Avg Carbs</span>
+                            <span className="text-sm font-bold text-orange-400">{summary.carbs}g</span>
+                        </div>
+                        <div className="w-px h-8 bg-zinc-800 mx-1"></div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[9px] font-bold text-purple-500/80 uppercase tracking-tighter">Daily Avg Insulin</span>
+                            <span className="text-sm font-bold text-purple-400">{summary.insulin}u</span>
+                        </div>
                     </div>
                 )}
             </div>
 
             <div className="w-full -ml-4" style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                    <ComposedChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorGlucose" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -90,6 +96,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary }: Glu
                             tickLine={false}
                             axisLine={false}
                             domain={['auto', 'auto']}
+                            padding={{ top: 40, bottom: 10 }}
                         />
 
                         {/* Carbs Axis: scaled 0-200g so normal meals (50g) are ~25% height */}
