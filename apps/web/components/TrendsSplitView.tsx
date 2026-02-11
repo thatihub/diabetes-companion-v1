@@ -301,19 +301,21 @@ export default function TrendsSplitView() {
                     <div className="relative w-full max-w-5xl bg-zinc-950 border border-zinc-800 rounded-[40px] p-8 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden max-h-[95vh] flex flex-col">
 
                         {/* Modal Header - Large & Distinct */}
-                        <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-8 border-b border-zinc-800 pb-8">
-                            <div className="space-y-2">
-                                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 border-b border-zinc-800 pb-8">
+                            <div className="space-y-1 text-center md:text-left flex-1">
+                                <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
                                     {selectedWeek.title.split(' (')[0]}
-                                    <span className="block text-lg font-medium text-zinc-500 mt-1 tracking-normal italic">
-                                        Detailed Analysis — {selectedWeek.title.split(' (')[1]?.replace(')', '')}
-                                    </span>
                                 </h2>
+                                <span className="block text-sm font-medium text-zinc-500 tracking-normal italic">
+                                    {selectedWeek.title.split(' (')[1]?.replace(')', '')}
+                                </span>
+                            </div>
 
+                            <div className="flex justify-center flex-1">
                                 <button
                                     onClick={handleAnalyzeWeek}
                                     disabled={analyzingWeek}
-                                    className="mt-4 flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 disabled:opacity-50"
                                 >
                                     {analyzingWeek ? (
                                         <>
@@ -321,21 +323,21 @@ export default function TrendsSplitView() {
                                         </>
                                     ) : (
                                         <>
-                                            <span className="text-lg">✨</span> Run AI Pattern Analysis
+                                            <span className="text-lg">✨</span> AI Pattern Analysis
                                         </>
                                     )}
                                 </button>
                             </div>
 
                             {selectedWeek.summary && (
-                                <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-                                    <div className="bg-orange-500/10 border border-orange-500/20 p-5 rounded-3xl min-w-[140px] text-right">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-500/60 block mb-1">Daily Avg Carbs</span>
-                                        <span className="text-3xl font-black text-orange-400">{selectedWeek.summary.carbs}g</span>
+                                <div className="grid grid-cols-2 gap-3 flex-1 justify-end">
+                                    <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-2xl min-w-[110px] text-center ml-auto">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-orange-500/60 block">Avg Carbs</span>
+                                        <span className="text-xl font-black text-orange-400">{selectedWeek.summary.carbs}g</span>
                                     </div>
-                                    <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-3xl min-w-[140px] text-right">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-purple-500/60 block mb-1">Daily Avg Insulin</span>
-                                        <span className="text-3xl font-black text-purple-400">{selectedWeek.summary.insulin}u</span>
+                                    <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl min-w-[110px] text-center">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-purple-500/60 block">Avg Insulin</span>
+                                        <span className="text-xl font-black text-purple-400">{selectedWeek.summary.insulin}u</span>
                                     </div>
                                 </div>
                             )}
