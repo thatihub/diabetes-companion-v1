@@ -41,44 +41,49 @@ export default function InsightCard({
     };
 
     return (
-        <div className="w-full max-w-sm bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-4 shadow-xl mb-6">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="text-indigo-200 text-sm font-medium uppercase tracking-wider flex items-center gap-2">
-                    {title}
+        <div className="w-full max-w-sm bg-gradient-to-br from-indigo-950/40 via-purple-950/40 to-indigo-950/40 border border-indigo-500/20 rounded-[32px] p-6 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full"></div>
+
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-indigo-200 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span className="text-xl">✨</span> {title}
                 </h3>
             </div>
 
             {!analysis && !loading && (
-                <div className="text-center py-2">
-                    <p className="text-zinc-400 text-xs mb-3">
-                        Get a summary of patterns and tips based on this data.
+                <div className="space-y-4">
+                    <p className="text-indigo-300/60 text-xs font-medium leading-relaxed">
+                        Decrypt metabolic patterns and receive physiological optimization advice.
                     </p>
                     <button
                         onClick={handleAnalyze}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium py-2 px-4 rounded-lg w-full transition-colors flex items-center justify-center gap-2"
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest py-4 px-6 rounded-2xl w-full transition-all active:scale-95 shadow-lg shadow-indigo-900/40 flex items-center justify-center gap-2"
                     >
-                        <span>Analyze Patterns</span>
+                        Execute Pattern Analysis
                     </button>
                 </div>
             )}
 
             {loading && (
-                <div className="flex flex-col items-center justify-center py-6 space-y-3">
-                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-indigo-300 text-xs animate-pulse">Analyzing your data...</p>
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                    <div className="relative w-12 h-12">
+                        <div className="absolute inset-0 border-2 border-indigo-500/20 rounded-full"></div>
+                        <div className="absolute inset-0 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p className="text-indigo-300 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">Computing Insights...</p>
                 </div>
             )}
 
             {analysis && (
-                <div className="mt-2 space-y-3 animate-fade-in">
-                    <div className="text-zinc-200 text-sm leading-relaxed whitespace-pre-line bg-black/20 p-3 rounded-xl border border-white/5">
+                <div className="mt-2 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="text-zinc-200 text-xs md:text-sm leading-relaxed whitespace-pre-line bg-black/40 p-5 rounded-2xl border border-white/5 shadow-inner">
                         {analysis}
                     </div>
                     <button
                         onClick={() => setAnalysis(null)}
-                        className="text-white/50 text-xs hover:text-white w-full text-center"
+                        className="text-zinc-600 hover:text-white text-[9px] font-black uppercase tracking-widest w-full text-center py-2 transition-colors"
                     >
-                        Close
+                        Dismiss Analysis
                     </button>
                 </div>
             )}

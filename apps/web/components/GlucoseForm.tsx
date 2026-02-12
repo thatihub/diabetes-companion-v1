@@ -42,74 +42,88 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
     }
 
     return (
-        <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-xl font-semibold text-white mb-4">Add Log</h2>
+        <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-[32px] p-6 md:p-8 shadow-2xl">
+            <h2 className="text-2xl font-black text-white mb-6 tracking-tight">Manual Log</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* Glucose Input */}
-                <div className="space-y-1">
-                    <label className="text-sm font-medium text-zinc-400">Glucose (mg/dL)</label>
-                    <input
-                        name="glucose"
-                        type="number"
-                        required
-                        placeholder="e.g. 110"
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-2xl font-bold text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
-                    />
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Current Glucose</label>
+                    <div className="relative">
+                        <input
+                            name="glucose"
+                            type="number"
+                            required
+                            placeholder="000"
+                            className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-3xl font-black text-white placeholder-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                        />
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-xs">mg/dL</span>
+                    </div>
                 </div>
 
-                {/* Meal Tag */}
-                <div className="space-y-1">
-                    <label className="text-sm font-medium text-zinc-400">Context</label>
-                    <select
-                        name="meal_tag"
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none appearance-none"
-                        defaultValue="fasting"
-                    >
-                        <option value="fasting">Fasting</option>
-                        <option value="pre_meal">Pre-meal</option>
-                        <option value="post_meal">Post-meal</option>
-                        <option value="bedtime">Bedtime</option>
-                        <option value="other">Other</option>
-                    </select>
+                {/* Context & Tags */}
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Event Context</label>
+                    <div className="relative">
+                        <select
+                            name="meal_tag"
+                            className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-sm font-bold text-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                            defaultValue="fasting"
+                        >
+                            <option value="fasting">🌅 Fasting / Morning</option>
+                            <option value="pre_meal">🍽️ Pre-meal</option>
+                            <option value="post_meal">🧪 Post-meal</option>
+                            <option value="bedtime">🌙 Bedtime</option>
+                            <option value="other">📋 Other</option>
+                        </select>
+                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                        </div>
+                    </div>
                 </div>
 
 
                 {/* Carbs & Insulin Grid */}
                 <div className="grid grid-cols-2 gap-4">
                     {/* Carbs */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-zinc-400">Carbs (g)</label>
-                        <input
-                            name="carbs"
-                            type="number"
-                            placeholder="0"
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                        />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Carbs</label>
+                        <div className="relative">
+                            <input
+                                name="carbs"
+                                type="number"
+                                placeholder="0"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-sm font-black text-emerald-400 placeholder-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-zinc-700 font-bold">g</span>
+                        </div>
                     </div>
 
                     {/* Insulin */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-zinc-400">Insulin (Units)</label>
-                        <input
-                            name="insulin"
-                            type="number"
-                            step="0.1"
-                            placeholder="0.0"
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                        />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Insulin</label>
+                        <div className="relative">
+                            <input
+                                name="insulin"
+                                type="number"
+                                step="0.1"
+                                placeholder="0.0"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-sm font-black text-rose-400 placeholder-zinc-800 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-zinc-700 font-bold">u</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Notes */}
-                <div className="space-y-1">
-                    <label className="text-sm font-medium text-zinc-400">Notes (Optional)</label>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Notes</label>
                     <textarea
                         name="notes"
                         rows={2}
-                        placeholder="How do you feel?"
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="Add a quick note..."
+                        className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-sm font-medium text-zinc-300 placeholder-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
                     />
                 </div>
 
@@ -117,21 +131,21 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                 <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all 
-            ${loading ? "bg-zinc-700 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-900/20"}
+                    className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] text-white transition-all 
+            ${loading ? "bg-zinc-800 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-[1.02] active:scale-95 shadow-xl shadow-blue-500/20"}
           `}
                 >
-                    {loading ? "Saving..." : "Save Log"}
+                    {loading ? "Recording..." : "Capture Data Entry"}
                 </button>
 
                 {/* Feedback Messages */}
                 {success && (
-                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm text-center animate-in fade-in slide-in-from-top-2">
-                        ✅ Reading saved successfully!
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-[10px] font-black uppercase tracking-widest text-center animate-in fade-in slide-in-from-top-2">
+                        🎉 Entry Synchronized
                     </div>
                 )}
                 {error && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center animate-in fade-in slide-in-from-top-2">
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-[10px] font-black uppercase tracking-widest text-center animate-in fade-in slide-in-from-top-2">
                         {error}
                     </div>
                 )}
