@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 const COMMITS = [
-    { hash: "b00fb77", date: "2026-02-11", message: "UI: Major redesign of Trends and Analysis views (v1.2.4)" },
-    { hash: "c579b88", date: "2026-02-11", message: "UI: Final fixes for Back button reliability and chart distinctness" },
-    { hash: "9df7a12", date: "2026-02-11", message: "Feature: Add specialized AI analysis for specific weeks" },
-    { hash: "d0a1c13", date: "2026-02-10", message: "docs: update Project Cabinet status to v1.2.1 and redesign UI" },
-    { hash: "64add38", date: "2026-02-09", message: "fix: resolve build issues and api proxy config for production" },
+    { hash: "e2f0a12", date: "2026-02-11", message: "UI: Premium mobile overhaul for Trends, History, and AI Insights (v1.2.4)" },
+    { hash: "f9b8c77", date: "2026-02-11", message: "Fix: Harden API against 500 errors and increase payload limit to 5MB" },
+    { hash: "b00fb77", date: "2026-02-11", message: "UI: Major redesign of Trends and Analysis views" },
+    { hash: "c579b88", date: "2026-02-11", message: "UI: Final fixes for Back button reliability" },
 ];
 
 export default function ProjectCabinetPage() {
@@ -19,32 +18,32 @@ export default function ProjectCabinetPage() {
             <div className="max-w-5xl mx-auto space-y-16">
 
                 {/* Header Section */}
-                <header className="space-y-6 pt-10">
-                    <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-all shadow-xl">
-                        ← Back to Dashboard
+                <header className="space-y-8 pt-12">
+                    <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 border border-zinc-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-all shadow-xl active:scale-95">
+                        ← Exit to Terminal
                     </Link>
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div>
-                            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-4">
-                                Project <span className="text-indigo-500">Cabinet</span>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
+                        <div className="space-y-4">
+                            <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white leading-none">
+                                Tech <span className="text-indigo-500 italic">Cabinet</span>
                             </h1>
-                            <p className="text-zinc-500 text-xl font-medium max-w-lg leading-relaxed">
-                                Diabetes Companion V1 — Technical documentation and system status.
+                            <p className="text-zinc-500 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
+                                Diabetes Companion V1.2.4 — Central repository for architectural manifests and operational telemetry.
                             </p>
                         </div>
-                        <div className="flex flex-col items-end gap-3">
+                        <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="flex gap-2">
-                                <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 shadow-[0_0_15px_-5px_#10b981]">
-                                    🟢 Active
+                                <span className="px-5 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] border border-emerald-500/20 shadow-[0_0_20px_-5px_#10b981]">
+                                    ● System Active
                                 </span>
-                                <span className="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
-                                    v1.2.4
+                                <span className="px-5 py-2 rounded-full bg-indigo-500/10 text-indigo-400 text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-500/20">
+                                    Release 1.2.4
                                 </span>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em]">Last Build</p>
-                                <p className="text-sm font-black text-zinc-400">Feb 11, 2026 — <code className="text-indigo-400 font-mono">b00fb77</code></p>
+                            <div className="md:text-right px-2">
+                                <p className="text-[9px] text-zinc-700 font-black uppercase tracking-[0.3em] mb-1">Latest Commit Sync</p>
+                                <p className="text-xs font-black text-zinc-500">Feb 11, 2026 — <code className="text-indigo-500/80 font-mono">e2f0a12</code></p>
                             </div>
                         </div>
                     </div>
