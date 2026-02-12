@@ -1,10 +1,10 @@
 # 🗄️ Project Cabinet: Diabetes Companion V1
 
 **Application**: Diabetes Companion (AI-Powered Glucose Tracker)
-**Version**: 1.2.4
-**Status**: 🟢 Production Ready (UI & Analysis Refined)
-**Stable Commit**: `b00fb77` (Feb 11, 2026)
-**Last Updated**: Feb 11, 2026
+**Version**: 1.2.5
+**Status**: 🔵 v3 Production Active (Live Dexcom Data Syncing)
+**Stable Commit**: `2444b8b` (Feb 12, 2026)
+**Last Updated**: Feb 12, 2026
 
 ---
 
@@ -15,6 +15,7 @@
 | **API Endpoint** | [https://diabetes-companion-api.onrender.com](https://diabetes-companion-api.onrender.com) |
 | **Repo** | [GitHub (Private)](https://github.com/thatihub/diabetes-companion-v1) |
 | **Quick Links** | [QUICK_LINKS.md](./QUICK_LINKS.md) |
+| **Data View** | [http://localhost:4000/data.html](http://localhost:4000/data.html) (Local) |
 
 ---
 
@@ -23,11 +24,27 @@
 - **Back End**: Node.js/Express.
 - **Database**: Supabase (PostgreSQL).
 - **AI Engine**: OpenAI (GPT-4o) via API (Backend Proxy).
-- **Integration**: Dexcom G7 (OAuth2), Apple Health (Shortcuts).
+- **Integration**: Dexcom G7 (v3 OAuth2), Apple Health (Shortcuts).
 
 ---
 
 ## 📜 Recent Change Log / Features Enabled
+
+### ✅ V1.2.5: The v3 Deep Sync & Metabolic Integration (Feb 12, 2026)
+- **Dexcom v3 Migration**:
+  - Switched production backend to Dexcom v3 API for G7 sensor compatibility.
+  - Resolved the "0 records" redirect bug by adopting modern v3 parsing.
+- **90-Day Deep History**:
+  - **Chunked Syncing**: Automated logic to pull 90 days in three 30-day increments (bypassing Dexcom API limits).
+  - **Background Migration**: Populated thousands of records from mid-November to present.
+- **Full Metabolic Profile**:
+  - Added parallel syncing of **Insulin Doses** and **Carb Entries** from Dexcom Cloud.
+  - Updated database schema (`glucose_readings`) to support standalone metabolic events (glucose-null entries).
+- **Data Viewer Pro (data.html)**:
+  - **New Columns**: Integrated Insulin (Rose) and Carbs (Emerald) columns with high-contrast status tags.
+  - **Navigation**: Added floating "Jump to Top/Bottom" buttons for ultra-fast history browsing.
+  - **Capacity**: Increased viewer limit to 50,000 records to support full 90-day density.
+- **Data Integrity**: Purged all mock "sine wave" data and simulations for a 100% verified "Real Data Only" environment.
 
 ### ✅ V1.2.4: The UI & Analysis Refinement (Feb 11, 2026)
 - **Trends UI Overhaul**:
