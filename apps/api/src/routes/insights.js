@@ -50,7 +50,7 @@ insightsRouter.post("/analyze-week", async (req, res) => {
             }
         );
 
-        const analysis = response.data.choices[0].message.content;
+        const analysis = response.data?.choices?.[0]?.message?.content || "AI could not generate a response.";
         res.json({ analysis });
 
     } catch (err) {
@@ -141,7 +141,7 @@ insightsRouter.post("/analyze", async (req, res) => {
             }
         );
 
-        const analysis = response.data.choices[0].message.content;
+        const analysis = response.data?.choices?.[0]?.message?.content || "AI could not generate a response.";
         res.json({ analysis });
 
     } catch (err) {

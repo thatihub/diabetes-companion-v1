@@ -40,8 +40,12 @@ glucoseRouter.post(
  */
 glucoseRouter.get("/glucose", async (req, res, next) => {
     try {
-        const limit = req.query.limit ? Math.min(Number(req.query.limit), 50000) : 1000;
-        const hours = req.query.hours ? Number(req.query.hours) : null;
+        let limit = req.query.limit ? Number(req.query.limit) : 1000;
+        if (isNaN(limit) || limit < 1) limit = 1000;
+        limit = Math.min(limit, 50000);
+
+        let hours = req.query.hours ? Number(req.query.hours) : null;
+        if (hours !== null && isNaN(hours)) hours = null;
 
         let queryText = `select * from glucose_readings`;
         const params = [];

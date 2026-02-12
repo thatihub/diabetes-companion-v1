@@ -41,7 +41,7 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 
     // Parse JSON with larger limit for trend data
-    app.use(express.json({ limit: '1mb' }));
+    app.use(express.json({ limit: '5mb' }));
 
     // CORS — Allow All Origins (for now)
     app.use(cors());
