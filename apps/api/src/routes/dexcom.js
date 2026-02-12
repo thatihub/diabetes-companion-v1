@@ -177,90 +177,82 @@ async function syncData(accessToken) {
             return stats;
         }
 
-        // PRODUCTION LOGIC (Your existing complex date logic)
+        // PRODUCTION LOGIC (Sync up to 90 days of history in chunks)
         if (rangeData && rangeData.egvs && rangeData.egvs.end) {
             stats.validRange = true;
 
-            // STRATEGY: "The Pulse" (Latest EGV Anchor)
-            // We ignore calibrations. If EGV header says data is there, we go there.
             const anchorTimeStr = rangeData.egvs.end.systemTime;
-
-            console.log(`[Dexcom Sync] Strategy: The Pulse (Anchor: ${anchorTimeStr})`);
+            console.log(`[Dexcom Sync] Deep Sync Initiated. Anchor: ${anchorTimeStr}`);
 
             const anchorRef = new Date(anchorTimeStr.replace("Z", "") + "Z");
 
-            // Window: Last 24h
-            const startRef = new Date(anchorRef.getTime() - 24 * 60 * 60 * 1000);
-            const endRef = new Date(anchorRef.getTime() + 1 * 60 * 60 * 1000); // +1h forward
+            // Loop to pull 90 days in 30-day chunks (API limit)
+            for (let i = 0; i < 3; i++) {
+                const chunkEnd = i === 0
+                    ? new Date(anchorRef.getTime() + 1 * 60 * 60 * 1000)
+                    : new Date(anchorRef.getTime() - (i * 30 * 24 * 60 * 60 * 1000));
 
-            // Format UTC
-            startDate = startRef.toISOString().split('.')[0];
-            endDate = endRef.toISOString().split('.')[0];
+                const chunkStart = new Date(anchorRef.getTime() - ((i + 1) * 30 * 24 * 60 * 60 * 1000));
 
-        } else {
-            // Fallback (UTC defaults)
-            startDate = "2026-01-25T00:00:00";
-            endDate = "2026-02-05T23:59:59";
-        }
+                const fmt = (d) => d.toISOString().split('.')[0];
+                const s = fmt(chunkStart);
+                const e = fmt(chunkEnd);
 
-        console.log(`[Dexcom Sync] Window: ${startDate} to ${endDate}`);
+                console.log(`[Dexcom Sync] Pulling Chunk ${i + 1}/3: ${s} to ${e}`);
 
-        // 2. Fetch EGVs
-        // Manual URL construction: ?startDate=...&endDate=...
-        const egvUrl = `${DEX_BASE_URL}/v2/users/self/egvs?startDate=${startDate}&endDate=${endDate}`;
-        logDexcom("EGV_FETCH_REQUEST", { url: egvUrl });
+                const version = DEX_BASE_URL.includes("sandbox") ? "v2" : "v3";
+                const egvUrl = `${DEX_BASE_URL}/${version}/users/self/egvs?startDate=${s}&endDate=${e}`;
+                const eventsUrl = `${DEX_BASE_URL}/${version}/users/self/events?startDate=${s}&endDate=${e}`;
 
-        // Note: Some docs suggest adding /v3/ headers but this is v2. 
-        // We stick to the minimal clean URL.
-        const egvRes = await axios.get(egvUrl, {
-            headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' }
-        });
+                try {
+                    const [egvRes, eventsRes] = await Promise.all([
+                        axios.get(egvUrl, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } }),
+                        axios.get(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } })
+                    ]);
 
-        logDexcom("EGV_FETCH_RESPONSE", { status: egvRes.status, count: egvRes.data.egvs ? egvRes.data.egvs.length : 0 }); // Don't log full body
+                    const chunkEgvs = version === "v3" ? (egvRes.data.records || []) : (egvRes.data.egvs || []);
+                    const chunkEvents = version === "v3" ? (eventsRes.data.records || []) : (eventsRes.data.events || []);
 
-        let egvs = egvRes.data.egvs || [];
-        stats.count = egvs.length;
-        if (egvs.length > 0) {
-            stats.latest = egvs[0].displayTime;
-        } else {
-            // AUTO-MOCK FALLBACK (Unblocking Development)
-            // Permission issue prevents real data. We inject mock data to verify UI.
-            console.log("[Dexcom Sync] 0 Records found. Injecting MOCK DATA for visualization.");
+                    console.log(`[Dexcom Sync] Chunk ${i + 1} found ${chunkEgvs.length} EGVs and ${chunkEvents.length} events.`);
 
-            const now = Date.now();
-            const mockReadings = [];
-            // Generate 24h of data (every 5 mins = ~288 points)
-            // Sine wave pattern
-            for (let i = 0; i < 288; i++) {
-                const time = new Date(now - (i * 5 * 60 * 1000));
-                // 120 baseline, +/- 40 sine wave
-                const val = Math.floor(120 + 40 * Math.sin(i / 20));
+                    // 1. Insert EGVs
+                    if (chunkEgvs.length > 0) {
+                        if (i === 0) stats.latest = chunkEgvs[0].displayTime;
+                        stats.count += chunkEgvs.length;
 
-                // Format UTC for DB
-                const timeStr = time.toISOString();
+                        for (const r of chunkEgvs) {
+                            if (r.value) {
+                                await query(
+                                    `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
+                                     VALUES ($1, $2, 'dexcom_api', 'Dexcom API (Live Data)')
+                                     ON CONFLICT DO NOTHING`,
+                                    [r.value, r.systemTime.endsWith("Z") ? r.systemTime : r.systemTime + "Z"]
+                                );
+                            }
+                        }
+                    }
 
-                mockReadings.push({
-                    value: val,
-                    systemTime: timeStr,
-                    displayTime: timeStr // Close enough
-                });
+                    // 2. Insert Events (Carbs/Insulin)
+                    for (const ev of chunkEvents) {
+                        if (ev.eventType === 'carbs' || ev.eventType === 'insulin') {
+                            const carbs = ev.eventType === 'carbs' ? ev.value : null;
+                            const insulin = ev.eventType === 'insulin' ? ev.value : null;
+                            const note = `Dexcom Event: ${ev.eventType}${ev.eventSubType ? ' (' + ev.eventSubType + ')' : ''}`;
+
+                            await query(
+                                `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes, carbs_grams, insulin_units)
+                                 VALUES (NULL, $1, 'dexcom_api', $2, $3, $4)
+                                 ON CONFLICT DO NOTHING`,
+                                [ev.systemTime.endsWith("Z") ? ev.systemTime : ev.systemTime + "Z", note, carbs, insulin]
+                            );
+                        }
+                    }
+                } catch (chunkErr) {
+                    console.error(`[Dexcom Sync] Chunk ${i + 1} failed:`, chunkErr.response?.data || chunkErr.message);
+                }
             }
-            egvs = mockReadings;
-            stats.count = 288;
-            stats.latest = new Date().toISOString();
-            logDexcom("MOCK_DATA_GENERATED", { count: 288 });
-        }
-
-        // Insert
-        for (const r of egvs) {
-            if (r.value) {
-                await query(
-                    `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
-                     VALUES ($1, $2, 'dexcom_api', 'Dexcom API (Mock)')
-                     ON CONFLICT DO NOTHING`,
-                    [r.value, r.systemTime.endsWith("Z") ? r.systemTime : r.systemTime + "Z"]
-                );
-            }
+        } else {
+            console.log("[Dexcom Sync] No range data found. Skipping deep sync.");
         }
 
         return stats;
