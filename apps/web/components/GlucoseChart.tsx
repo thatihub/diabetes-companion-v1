@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
+import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 import { api } from "../lib/api";
 
 type GlucosePoint = {
@@ -45,7 +45,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                 const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=10000`);
 
                 const sorted = points
-                    .filter(p => p.measured_at && !isNaN(new Date(p.measured_at).getTime())) // Filter invalid dates
+                    .filter(p => p.measured_at && !isNaN(new Date(p.measured_at).getTime()))
                     .reverse()
                     .map(p => ({
                         ...p,
@@ -54,7 +54,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                         time: range === "24h"
                             ? new Date(p.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : new Date(p.measured_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-                        timestamp: new Date(p.measured_at).getTime()
+                        fullTime: new Date(p.measured_at).toLocaleString()
                     }));
                 setData(sorted);
             } catch (err) {
@@ -71,16 +71,19 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const ranges: Range[] = ["24h", "3d", "7d", "14d", "30d", "90d"];
 
     return (
-        <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-xl mb-6">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">Trend</h3>
-                <div className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="wellness-card p-6 mb-8 mx-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 className="text-slate-100 text-lg font-bold tracking-tight">Clarity View</h3>
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Continuous Trends</p>
+                </div>
+                <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-fit overflow-x-auto no-scrollbar">
                     {ranges.map(r => (
                         <button
                             key={r}
                             onClick={() => setRange(r)}
-                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors whitespace-nowrap
-                                ${range === r ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`px-4 py-2 text-[10px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap
+                                ${range === r ? 'bg-slate-700 text-teal-400 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                         >
                             {r}
                         </button>
@@ -88,114 +91,107 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                 </div>
             </div>
 
-            {!isMounted ? (
-                <div className="h-48 flex items-center justify-center text-zinc-600 text-xs">Loading Chart...</div>
-            ) : loading && data.length === 0 ? (
-                <div className="h-48 flex items-center justify-center text-zinc-600 text-xs">Loading Chart...</div>
+            {!isMounted || (loading && data.length === 0) ? (
+                <div className="h-64 flex flex-col items-center justify-center text-slate-600 gap-3">
+                    <div className="w-8 h-8 border-4 border-slate-700 border-t-teal-400 rounded-full animate-spin"></div>
+                    <span className="text-xs font-bold tracking-widest uppercase">Analyzing Data...</span>
+                </div>
             ) : error ? (
-                <div className="h-48 flex flex-col items-center justify-center gap-2 bg-yellow-900/10 rounded-lg">
-                    <p className="text-yellow-400 text-xs">⚠️ {error}</p>
+                <div className="h-64 flex flex-col items-center justify-center gap-4 bg-rose-500/5 rounded-3xl border border-rose-500/10">
+                    <p className="text-rose-400 text-xs font-bold uppercase tracking-widest">⚠️ Sync Failed</p>
                     <button
                         onClick={() => setRange(range)}
-                        className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs rounded transition-colors"
+                        className="px-6 py-2 bg-rose-900/40 hover:bg-rose-900/60 text-rose-100 text-[10px] font-bold uppercase tracking-widest rounded-full border border-rose-500/20 transition-all"
                     >
-                        Retry
+                        Retry Sync
                     </button>
                 </div>
             ) : data.length < 2 ? (
-                <div className="h-48 flex items-center justify-center text-zinc-600 text-xs bg-zinc-900/50 rounded-lg">
-                    Not enough data for this range
+                <div className="h-64 flex items-center justify-center text-slate-600 text-[10px] font-bold uppercase tracking-widest bg-slate-900/20 rounded-3xl">
+                    Awaiting more readings...
                 </div>
             ) : (
-                <div className="h-48 w-full -ml-4">
+                <div className="h-64 w-full -ml-2">
                     <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                        <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
-                                <linearGradient id="colorGlucose" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                <linearGradient id="colorGlucoseRedesign" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#94d2bd" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#94d2bd" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#475569" vertical={false} strokeOpacity={0.2} />
 
-                            {/* Time Axis */}
                             <XAxis
                                 dataKey="time"
-                                stroke="#52525b"
+                                stroke="#94a3b8"
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                minTickGap={60}
+                                minTickGap={30}
+                                fontStyle="bold"
                             />
 
-                            {/* Glucose Axis (Left) */}
                             <YAxis
                                 yAxisId="glucose"
-                                hide={false}
-                                stroke="#52525b"
+                                stroke="#94a3b8"
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                domain={['auto', 'auto']}
-                                allowDataOverflow={false}
+                                domain={[40, 400]}
+                                tickCount={8}
+                                fontStyle="bold"
                             />
 
-                            {/* Carbs Axis: scaled 0-200g so normal meals (50g) are ~25% height */}
-                            <YAxis
-                                yAxisId="carbs"
-                                orientation="right"
-                                hide={true}
-                                domain={[0, 200]}
-                            />
+                            <YAxis yAxisId="carbs" orientation="right" hide domain={[0, 200]} />
+                            <YAxis yAxisId="insulin" orientation="right" hide domain={[0, 30]} />
 
-                            {/* Insulin Axis: scaled 0-30u so normal doses (5u) are ~16% height */}
-                            <YAxis
-                                yAxisId="insulin"
-                                orientation="right"
-                                hide={true}
-                                domain={[0, 30]}
-                            />
+                            {/* Clarity Range Bands */}
+                            <ReferenceArea yAxisId="glucose" y1={70} y2={180} fill="#94d2bd" fillOpacity={0.03} />
+                            <ReferenceArea yAxisId="glucose" y1={0} y2={70} fill="#ae2012" fillOpacity={0.05} />
+                            <ReferenceArea yAxisId="glucose" y1={180} y2={400} fill="#ee9b00" fillOpacity={0.05} />
 
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
-                                itemStyle={{ color: '#fff' }}
+                                content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                        const d = payload[0].payload;
+                                        return (
+                                            <div className="bg-slate-800 border border-slate-700 p-3 rounded-2xl shadow-2xl backdrop-blur-xl">
+                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{d.fullTime}</p>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-xl font-bold flex items-baseline gap-1">
+                                                        {d.glucose_mgdl}
+                                                        <span className="text-[10px] font-medium text-slate-500">mg/dL</span>
+                                                    </p>
+                                                    {d.carbs_grams && <p className="text-[10px] font-bold text-emerald-400 capitalize">🍴 {d.carbs_grams}g Carbs</p>}
+                                                    {d.insulin_units && <p className="text-[10px] font-bold text-rose-400 capitalize">💉 {d.insulin_units}u Insulin</p>}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
                             />
 
-                            <ReferenceLine yAxisId="glucose" y={70} stroke="#ef4444" strokeDasharray="3 3" />
-                            <ReferenceLine yAxisId="glucose" y={180} stroke="#f97316" strokeDasharray="3 3" />
+                            {/* Range Indicators */}
+                            <ReferenceArea yAxisId="glucose" y1={70} y2={70.5} fill="#94d2bd" fillOpacity={0.3} />
+                            <ReferenceArea yAxisId="glucose" y1={180} y2={180.5} fill="#ee9b00" fillOpacity={0.3} />
 
-                            {/* Main Glucose Trend */}
                             <Area
                                 yAxisId="glucose"
                                 type="monotone"
                                 dataKey="glucose_mgdl"
-                                name="Glucose"
-                                stroke="#3b82f6"
+                                stroke="#94d2bd"
                                 strokeWidth={3}
-                                fillOpacity={1}
-                                fill="url(#colorGlucose)"
+                                fill="url(#colorGlucoseRedesign)"
+                                animationDuration={1500}
+                                isAnimationActive={true}
+                                dot={false}
+                                activeDot={{ r: 6, fill: '#f8fafc', stroke: '#94d2bd', strokeWidth: 2 }}
                             />
 
-                            {/* Carbs Bar (Orange) */}
-                            <Bar
-                                yAxisId="carbs"
-                                dataKey="carbs_grams"
-                                name="Carbs (g)"
-                                fill="#fb923c"
-                                barSize={6}
-                                radius={[3, 3, 0, 0]}
-                                fillOpacity={0.9}
-                            />
-
-                            <Bar
-                                yAxisId="insulin"
-                                dataKey="insulin_units"
-                                name="Insulin (u)"
-                                fill="#a855f7"
-                                barSize={6}
-                                radius={[3, 3, 0, 0]}
-                                fillOpacity={0.9}
-                            />
+                            <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#10b981" barSize={8} radius={[4, 4, 0, 0]} opacity={0.8} />
+                            <Bar yAxisId="insulin" dataKey="insulin_units" fill="#f43f5e" barSize={3} radius={[2, 2, 0, 0]} opacity={0.8} />
                         </ComposedChart>
                     </ResponsiveContainer>
                 </div>

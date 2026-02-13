@@ -3,26 +3,34 @@
 @tailwind utilities;
 
 :root {
-  /* Premium Dark Theme Variables */
-  --bg-primary: #09090b;
-  --bg-secondary: #18181b;
-  --bg-tertiary: #27272a;
+  /* Premium Slate-Wellness Theme Variables */
+  --bg-primary: #1e293b;
+  /* Deep Slate Blue */
+  --bg-secondary: #334155;
+  /* Mid Slate for Cards */
+  --bg-tertiary: #475569;
+  /* Lighter Slate for active states */
 
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
 
-  --accent-primary: #3b82f6;
-  /* Blue-500 */
-  --accent-danger: #ef4444;
-  /* Red-500 */
-  --accent-success: #22c55e;
-  /* Green-500 */
+  --accent-teal: #94d2bd;
+  /* Flo-style soft teal */
+  --accent-coral: #ee9b00;
+  /* Warm accent */
+  --accent-danger: #ae2012;
+  /* Richer red */
+  --accent-success: #008000;
+  /* Pure green for clarity target */
+
+  --card-radius: 32px;
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-inter), sans-serif;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -30,4 +38,38 @@ body {
 *:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+/* Glassmorphism & Soft Card Base */
+.wellness-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  border-radius: var(--card-radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wellness-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Custom Scrollbar for a cleaner feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

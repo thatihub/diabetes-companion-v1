@@ -40,8 +40,8 @@ export default function TrendsSplitView() {
         try {
             const res = await api.post<{ analysis: string }>("/api/insights/analyze", { range });
             setAnalysis(res.analysis);
-        } catch (e) {
-            setAnalysis("Failed to generate insights.");
+        } catch (e: any) {
+            setAnalysis(`Failed to generate insights: ${e.message || 'Unknown error'}`);
         } finally {
             setAnalyzing(false);
         }
@@ -57,8 +57,8 @@ export default function TrendsSplitView() {
                 data: selectedWeek.points
             });
             setWeekAnalysis(res.analysis);
-        } catch (e) {
-            setWeekAnalysis("Failed to generate weekly insights.");
+        } catch (e: any) {
+            setWeekAnalysis(`Failed to generate weekly insights: ${e.message || 'Unknown error'}`);
         } finally {
             setAnalyzingWeek(false);
         }
@@ -107,50 +107,71 @@ export default function TrendsSplitView() {
                     setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
                 }
 
-                // Process Data: Split into 7-day chunks
-                const now = new Date();
-                const chunks = [];
+                // Optimized Processing: One-pass grouping (O(N))
+                const processingNow = rawPoints.length > 0
+                    ? new Date(rawPoints[0].measured_at) // Use latest point as reference point
+                    : new Date();
+
+                const nowMs = processingNow.getTime();
                 const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+                const chunks: any[] = [];
 
-                // Calculate number of weeks needed
+                // Initialize chunks
                 const weeks = Math.ceil(totalHours / (24 * 7));
-
                 for (let i = 0; i < weeks; i++) {
-                    const chunkEnd = new Date(now.getTime() - (i * oneWeekMs));
-                    const chunkStart = new Date(now.getTime() - ((i + 1) * oneWeekMs)); // inclusive of end, exclusive of start logic basically
-
-                    // Filter points for this week
-                    const chunkPoints = rawPoints.filter(p => {
-                        const t = new Date(p.measured_at).getTime();
-                        return t > chunkStart.getTime() && t <= chunkEnd.getTime();
+                    const chunkEnd = new Date(nowMs - (i * oneWeekMs));
+                    const chunkStart = new Date(nowMs - ((i + 1) * oneWeekMs));
+                    chunks.push({
+                        title: `Week ${i + 1} (${chunkStart.toLocaleDateString([], { month: 'short', day: 'numeric' })} - ${chunkEnd.toLocaleDateString([], { month: 'short', day: 'numeric' })})`,
+                        startMs: chunkStart.getTime(),
+                        endMs: chunkEnd.getTime(),
+                        raw: [],
+                        points: [],
+                        summary: { carbs: 0, insulin: 0 }
                     });
-
-                    if (chunkPoints.length > 0) {
-                        // Format for Graph
-                        const formatted = chunkPoints.reverse().map(p => ({
-                            ...p,
-                            insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
-                            carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
-                            time: new Date(p.measured_at).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                            timestamp: new Date(p.measured_at).getTime()
-                        }));
-
-                        // Weekly Daily Averages
-                        const weekCarbs = chunkPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
-                        const weekInsulin = chunkPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
-
-                        chunks.push({
-                            title: `Week ${i + 1} (${chunkStart.toLocaleDateString([], { month: 'short', day: 'numeric' })} - ${chunkEnd.toLocaleDateString([], { month: 'short', day: 'numeric' })})`,
-                            points: formatted,
-                            summary: {
-                                carbs: Number((weekCarbs / 7).toFixed(1)),
-                                insulin: Number((weekInsulin / 7).toFixed(1))
-                            }
-                        });
-                    }
                 }
 
-                setWeeklyData(chunks);
+                // Single pass distribution (O(N))
+                rawPoints.forEach(p => {
+                    const t = new Date(p.measured_at).getTime();
+                    const weekIdx = Math.floor((nowMs - t) / oneWeekMs);
+                    if (weekIdx >= 0 && weekIdx < chunks.length) {
+                        chunks[weekIdx].raw.push(p);
+                    } else if (weekIdx < 0) {
+                        chunks[0].raw.push(p);
+                    }
+                });
+
+                // Finalize chunks (reverse and sample for performance)
+                chunks.forEach(chunk => {
+                    if (chunk.raw.length > 0) {
+                        const totalCarbs = chunk.raw.reduce((acc: number, p: any) => acc + (Number(p.carbs_grams) || 0), 0);
+                        const totalInsulin = chunk.raw.reduce((acc: number, p: any) => acc + (Number(p.insulin_units) || 0), 0);
+                        chunk.summary = {
+                            carbs: Number((totalCarbs / 7).toFixed(1)),
+                            insulin: Number((totalInsulin / 7).toFixed(1))
+                        };
+
+                        // Intelligent Sampling for Chart Performance
+                        let toProcess = chunk.raw.reverse();
+                        const sampleRate = Math.ceil(toProcess.length / 800); // Target ~800 pts per week for smoothness
+
+                        chunk.points = toProcess
+                            .filter((_: any, idx: number) => idx % sampleRate === 0)
+                            .map((p: any) => ({
+                                ...p,
+                                insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
+                                carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
+                                time: new Date(p.measured_at).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                                timestamp: new Date(p.measured_at).getTime()
+                            }));
+                    }
+                    delete chunk.raw; // Cleanup
+                    delete chunk.startMs;
+                    delete chunk.endMs;
+                });
+
+                setWeeklyData(chunks.filter(c => c.points.length > 0));
 
             } catch (err) {
                 console.error("Failed to load trends data", err);
@@ -168,119 +189,130 @@ export default function TrendsSplitView() {
     return (
         <div className="w-full">
             {/* Controls Row */}
-            <div className="flex flex-col md:flex-row items-center justify-between mb-6 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 gap-4">
-                <div className="flex items-center gap-4">
-                    <span className="text-zinc-400 text-sm">Select Period:</span>
-                    <div className="flex gap-2">
-                        {ranges.map(r => (
-                            <button
-                                key={r}
-                                onClick={() => { setRange(r); setAnalysis(null); }}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
-                                    ${range === r ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'}`}
-                            >
-                                {r}
-                            </button>
-                        ))}
-                    </div>
+            <div className="px-6 flex flex-col items-center mb-12 gap-8">
+                {/* Range Selector - Centered Row */}
+                <div className="flex bg-slate-800/40 p-2 rounded-[28px] border border-slate-700/50 backdrop-blur-md w-fit">
+                    {ranges.map(r => (
+                        <button
+                            key={r}
+                            onClick={() => { setRange(r); setAnalysis(null); }}
+                            className={`px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.25em] rounded-[22px] transition-all
+                                ${range === r ? 'bg-teal-500 text-slate-950 shadow-[0_0_30px_rgba(20,184,166,0.3)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                        >
+                            {r}
+                        </button>
+                    ))}
                 </div>
 
-                <button
-                    onClick={handleAnalyze}
-                    disabled={analyzing}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                    {analyzing ? (
-                        <>
-                            <span className="animate-spin text-lg">✨</span> Analyzing...
-                        </>
-                    ) : (
-                        <>
-                            <span className="text-lg">✨</span> Analyze Trends with AI
-                        </>
-                    )}
-                </button>
+                {/* AI Action Button - Balanced and Centered */}
+                <div className="w-full max-w-md px-6 flex justify-center">
+                    <button
+                        onClick={handleAnalyze}
+                        disabled={analyzing}
+                        className="group relative w-full flex items-center justify-center gap-4 px-10 py-6 bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-[0.3em] rounded-[32px] hover:bg-teal-500 hover:text-slate-950 transition-all duration-300 disabled:opacity-50 overflow-hidden active:scale-95 shadow-xl"
+                    >
+                        <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        {analyzing ? (
+                            <>
+                                <span className="animate-spin text-xl">✨</span> Computing Metabolic Intelligence...
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-xl">✨</span> Generate Pattern Scan
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* AI Analysis Result */}
             {analysis && (
-                <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 p-6 rounded-xl mb-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <h3 className="text-indigo-200 font-bold mb-3 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">🤖</span> AI Trend Analysis ({range})
-                        </div>
+                <div className="mx-6 wellness-card p-10 mb-10 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500 shadow-[0_0_20px_#94d2bd]"></div>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-teal-400 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-4 bg-teal-500/5 px-6 py-3 rounded-full border border-teal-500/10">
+                            <span className="text-xl">🤖</span> AI Pattern Analysis Diagnosis ({range})
+                        </h3>
                         <button
                             onClick={() => setAnalysis(null)}
-                            className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                            aria-label="Close"
+                            className="p-2 hover:bg-slate-700/50 rounded-full text-slate-500 transition-colors"
                         >
-                            <span className="text-lg">×</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
-                    </h3>
-                    <div className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap mb-4">
+                    </div>
+                    <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
                         {analysis}
                     </div>
-                    <button
-                        onClick={() => setAnalysis(null)}
-                        className="text-[10px] text-white/40 hover:text-white/70 uppercase tracking-widest font-bold w-full text-center py-2 border-t border-white/5"
-                    >
-                        Dismiss Analysis
-                    </button>
                 </div>
             )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4 w-full mb-8">
-                <div className="bg-zinc-900/50 p-3 md:p-4 rounded-xl border border-zinc-800">
-                    <h3 className="text-[10px] md:text-sm text-zinc-400 uppercase tracking-wider font-bold mb-1">Avg Glucose</h3>
-                    <p className="text-xl md:text-2xl font-black text-white">{stats.avg > 0 ? stats.avg : '--'} <span className="text-[10px] text-zinc-500 font-normal">mg/dL</span></p>
+            <div className="grid grid-cols-2 gap-4 px-6 mb-10">
+                <div className="wellness-card p-6">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Average Glucose</h3>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-slate-100">{stats.avg > 0 ? stats.avg : '--'}</span>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase">mg/dL</span>
+                    </div>
                 </div>
-                <div className="bg-zinc-900/50 p-3 md:p-4 rounded-xl border border-zinc-800">
-                    <h3 className="text-[10px] md:text-sm text-zinc-400 uppercase tracking-wider font-bold mb-1">GMI (Est. A1C)</h3>
-                    <p className="text-xl md:text-2xl font-black text-white">{stats.gmi > 0 ? stats.gmi : '--'} <span className="text-[10px] text-zinc-500 font-normal">%</span></p>
+                <div className="wellness-card p-6">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">GMI (Est. A1C)</h3>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-slate-100">{stats.gmi > 0 ? stats.gmi : '--'}</span>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase">%</span>
+                    </div>
                 </div>
-                <div className="bg-zinc-900/50 p-3 md:p-4 rounded-xl border border-zinc-800 border-t-emerald-500/30">
-                    <h3 className="text-[10px] md:text-sm text-zinc-400 uppercase tracking-wider font-bold mb-1">Avg Carbs</h3>
-                    <p className="text-xl md:text-2xl font-black text-emerald-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} <span className="text-[10px] text-zinc-500 font-normal">g/day</span></p>
+                <div className="wellness-card p-6">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Carbs</h3>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-teal-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'}</span>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase">g/day</span>
+                    </div>
                 </div>
-                <div className="bg-zinc-900/50 p-3 md:p-4 rounded-xl border border-zinc-800 border-t-rose-500/30">
-                    <h3 className="text-[10px] md:text-sm text-zinc-400 uppercase tracking-wider font-bold mb-1">Avg Insulin</h3>
-                    <p className="text-xl md:text-2xl font-black text-rose-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} <span className="text-[10px] text-zinc-500 font-normal">u/day</span></p>
+                <div className="wellness-card p-6">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Insulin</h3>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-rose-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'}</span>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase">u/day</span>
+                    </div>
                 </div>
             </div>
 
             {/* Graphs List */}
             {
                 loading ? (
-                    <div className="text-center text-zinc-500 py-10 font-bold uppercase tracking-widest text-[10px]">Loading Trends...</div>
+                    <div className="px-6 space-y-8">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-64 w-full bg-slate-800/20 animate-pulse rounded-[32px]"></div>
+                        ))}
+                    </div>
                 ) : error ? (
-                    <div className="text-center py-10 px-4">
-                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-2xl p-6 max-w-md mx-auto">
-                            <p className="text-yellow-400 text-sm mb-4">⚠️ {error}</p>
+                    <div className="px-6 py-10">
+                        <div className="wellness-card p-10 text-center">
+                            <p className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-6">⚠️ Protocol Deviation: {error}</p>
                             <button
                                 onClick={() => setRange(range)}
-                                className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+                                className="px-10 py-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest rounded-3xl"
                             >
-                                Retry
+                                Re-sync Data
                             </button>
                         </div>
                     </div>
                 ) : weeklyData.length === 0 ? (
-                    <div className="text-center text-zinc-500 py-10 font-bold uppercase tracking-widest text-[10px]">No data found.</div>
+                    <div className="px-6 text-center text-slate-500 py-10 font-bold uppercase tracking-widest text-[10px]">Awaiting historical synchronization...</div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="pb-20">
                         {weeklyData.map((week, idx) => (
                             <div
                                 key={idx}
                                 onClick={() => setSelectedWeek(week)}
-                                className="cursor-pointer hover:scale-[1.01] transition-transform active:scale-95"
+                                className="cursor-pointer active:scale-95 transition-transform"
                             >
                                 <GlucoseGraph
                                     data={week.points}
                                     title={week.title}
                                     summary={week.summary}
-                                    height={200}
+                                    height={220}
                                 />
                             </div>
                         ))}
@@ -288,118 +320,120 @@ export default function TrendsSplitView() {
                 )
             }
 
-            {/* Enlarged Modal Popup */}
+            {/* Enlarged Modal Popup (Diagnostic View) */}
             {selectedWeek && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4 animate-in fade-in duration-300">
-                    {/* Backdrop */}
+                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 animate-in fade-in duration-500">
                     <div
-                        className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+                        className="absolute inset-0 bg-slate-950/95 backdrop-blur-[60px]"
                         onClick={() => setSelectedWeek(null)}
                     ></div>
 
-                    {/* Modal Content */}
-                    <div className="relative w-full max-w-5xl bg-[#09090b] border-t md:border border-zinc-800 rounded-t-[32px] md:rounded-[40px] p-6 md:p-10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden max-h-[92vh] md:max-h-[95vh] flex flex-col animate-in slide-in-from-bottom-10 duration-500">
-
+                    <div className="relative w-full max-w-5xl bg-slate-900 border-t md:border border-white/5 rounded-t-[48px] md:rounded-[56px] p-8 md:p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden max-h-[96vh] flex flex-col animate-in slide-in-from-bottom-20 duration-700">
                         {/* Pull bar for mobile */}
-                        <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-6 md:hidden"></div>
+                        <div className="w-16 h-1.5 bg-slate-800 rounded-full mx-auto mb-10 md:hidden opacity-50"></div>
 
-                        {/* Modal Header */}
-                        <div className="flex flex-col gap-6 mb-8 border-b border-zinc-800 pb-8 relative">
+                        {/* Modal Header: Deep Insight Page Title */}
+                        <div className="flex flex-col gap-10 mb-12">
                             <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter">
+                                <div className="space-y-2">
+                                    <h2 className="text-4xl md:text-5xl font-black text-slate-100 tracking-tighter">
                                         {selectedWeek.title.split(' (')[0]}
                                     </h2>
-                                    <span className="block text-xs md:text-sm font-bold text-zinc-500 uppercase tracking-widest">
-                                        {selectedWeek.title.split(' (')[1]?.replace(')', '')}
-                                    </span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
+                                        <span className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.4em]">
+                                            {selectedWeek.title.split(' (')[1]?.replace(')', '')}
+                                        </span>
+                                    </div>
                                 </div>
                                 <button
-                                    onClick={() => setSelectedWeek(null)}
-                                    className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white transition-all md:relative md:top-0 md:right-0"
+                                    onClick={() => {
+                                        console.log("Close modal clicked");
+                                        setSelectedWeek(null);
+                                    }}
+                                    className="relative z-50 w-14 h-14 flex items-center justify-center bg-slate-800/40 rounded-full text-slate-500 hover:text-white transition-all border border-white/5 hover:scale-110 active:scale-90"
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
-                            </div>
-
-                            <div className="flex flex-col md:flex-row items-center gap-6">
-                                <button
-                                    onClick={handleAnalyzeWeek}
-                                    disabled={analyzingWeek}
-                                    className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-95 disabled:opacity-50"
-                                >
-                                    {analyzingWeek ? (
-                                        <>
-                                            <span className="animate-spin text-lg">✨</span> Analyzing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="text-xl">✨</span> AI Pattern Analysis
-                                        </>
-                                    )}
-                                </button>
-
-                                {selectedWeek.summary && (
-                                    <div className="flex items-center gap-4 w-full md:w-auto">
-                                        <div className="flex-1 md:flex-none md:min-w-[120px] bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl text-center">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500/60 block mb-1">Avg Carbs</span>
-                                            <span className="text-xl font-black text-emerald-400">{selectedWeek.summary.carbs}g</span>
-                                        </div>
-                                        <div className="flex-1 md:flex-none md:min-w-[120px] bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl text-center">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-rose-500/60 block mb-1">Avg Insulin</span>
-                                            <span className="text-xl font-black text-rose-400">{selectedWeek.summary.insulin}u</span>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pr-1">
-                            {/* Larger Graph with responsiveness */}
-                            <div className="bg-zinc-950/50 rounded-3xl border border-zinc-900 overflow-hidden">
+                        {/* Diagnostic Action Bar - Stacked Layout */}
+                        <div className="flex flex-col gap-6">
+                            <button
+                                onClick={() => {
+                                    console.log("Analyze week clicked");
+                                    handleAnalyzeWeek();
+                                }}
+                                disabled={analyzingWeek}
+                                className="group relative w-full flex items-center justify-center gap-3 px-6 py-5 bg-teal-500 text-slate-950 text-[10px] font-bold uppercase tracking-[0.1em] rounded-[24px] hover:shadow-[0_0_50px_rgba(20,184,166,0.3)] transition-all disabled:opacity-50 overflow-hidden active:scale-95 min-h-[60px]"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <span className="relative z-10 flex items-center gap-2">
+                                    {analyzingWeek ? (
+                                        <><span className="animate-spin text-lg">✨</span> Analyzing Patterns...</>
+                                    ) : (
+                                        <><span className="text-lg">✨</span> Generate Week Diagnosis</>
+                                    )}
+                                </span>
+                            </button>
+
+                            {selectedWeek.summary && (
+                                <div className="flex-1 flex items-center justify-around gap-4 px-10 py-7 bg-slate-800/60 rounded-[32px] border border-white/10 backdrop-blur-xl min-h-[84px] shadow-inner">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.25em] block mb-2">Avg Carbs</span>
+                                        <span className="text-3xl font-black text-teal-400 tracking-tighter">{selectedWeek.summary.carbs}g</span>
+                                    </div>
+                                    <div className="w-px h-12 bg-white/5"></div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.25em] block mb-2">Avg Insulin</span>
+                                        <span className="text-3xl font-black text-rose-400 tracking-tighter">{selectedWeek.summary.insulin}u</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Chart Area */}
+                        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pr-1 pb-16">
+                            <div className="bg-slate-800/20 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden">
                                 <GlucoseGraph
                                     data={selectedWeek.points}
                                     title=""
-                                    height={typeof window !== 'undefined' && window.innerWidth < 768 ? 320 : 450}
+                                    height={400}
+                                    minimal={true}
                                 />
                             </div>
 
                             {weekAnalysis && (
-                                <div className="mt-8 bg-zinc-900/30 border border-indigo-500/20 p-6 md:p-10 rounded-[32px] relative overflow-hidden group">
-                                    <div className="absolute top-0 left-0 w-2 h-full bg-indigo-600 shadow-[0_0_20px_#4f46e5]"></div>
-                                    <h4 className="text-indigo-200 text-xl font-black mb-6 flex items-center gap-3">
-                                        <span className="text-3xl">🤖</span> AI Diagnosis
-                                    </h4>
-                                    <div className="text-zinc-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                                        {weekAnalysis}
+                                <div className="mt-12 group relative">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-[40px] blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200"></div>
+                                    <div className="relative wellness-card p-10 md:p-12 border-white/10">
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center text-slate-950 shadow-[0_0_20px_rgba(20,184,166,0.5)]">
+                                                <span className="text-2xl font-black">AI</span>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-slate-100 text-lg font-black tracking-tight">Intelligence Scan</h4>
+                                                <p className="text-teal-400 text-[9px] font-black uppercase tracking-[0.3em]">Full Pattern Diagnosis Complete</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
+                                            {weekAnalysis}
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="mt-8 p-6 bg-zinc-900/20 rounded-[28px] border border-zinc-800/50">
-                                <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">Clinical Reference</h4>
-                                <p className="text-zinc-500 text-xs leading-relaxed font-medium">
-                                    This visualization incorporates high-density biometric data (15-min intervals).
-                                    Blue clusters denote target stability; emerald spikes represent glycemic load and rose pillars denote pharmaco-corrections.
+                            <div className="mt-12 p-10 bg-slate-800/10 rounded-[40px] border border-white/5 opacity-60">
+                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4">Diagnostic Context</h4>
+                                <p className="text-slate-500 text-xs leading-relaxed font-medium">
+                                    This visualization synthesizes high-resolution biometric telemetry. Teal gradients map to target stability; vertical pillars denote exogenous insulin boluses and glycemic loading events.
                                 </p>
                             </div>
-
-                            {/* Bottom spacing for mobile */}
-                            <div className="h-20 md:hidden"></div>
-                        </div>
-
-                        {/* Modal Footer (Sticky if needed, or buttom of list) */}
-                        <div className="mt-auto pt-6 border-t border-zinc-900 flex justify-center pb-8 md:pb-0">
-                            <button
-                                onClick={() => setSelectedWeek(null)}
-                                className="w-full md:w-auto px-16 py-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-white rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase transition-all shadow-2xl"
-                            >
-                                Close Detailed View
-                            </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div >
+        </div>
     );
 }

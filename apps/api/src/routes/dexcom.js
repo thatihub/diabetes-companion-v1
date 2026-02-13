@@ -81,16 +81,25 @@ dexcomRouter.get("/callback", async (req, res) => {
         };
         fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokenData, null, 2));
 
-        // SYNC DATA
-        const stats = await syncData(access_token);
+        // SYNC DATA (Background - Non-blocking to prevent OAuth TTO timeouts)
+        // We trigger the sync but DON'T await it before redirecting.
+        logDexcom("SYNC_STARTED_BACKGROUND", { message: "Redirecting user now while sync continues." });
+        syncData(access_token).then(stats => {
+            logDexcom("SYNC_COMPLETED_BACKGROUND", stats);
+        }).catch(err => {
+            logDexcom("SYNC_FAILED_BACKGROUND", { error: err.message });
+        });
 
-        // Redirect with stats
-        res.redirect(`http://localhost:3001?dexcom_sync=success&valid=${stats.validRange}&count=${stats.count}&latest=${stats.latest}`);
+        // Redirect immediately back to the frontend
+        // We use a fallback but ideally should come from an env var
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+        res.redirect(`${frontendUrl}?dexcom_sync=started`);
 
     } catch (err) {
         const errDetails = err.response ? { status: err.response.status, data: err.response.data } : { message: err.message };
         logDexcom("AUTH_FAILURE", errDetails);
-        res.redirect(`http://localhost:3001?dexcom_error=AUTH_FAILED`);
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+        res.redirect(`${frontendUrl}?dexcom_error=AUTH_FAILED`);
     }
 });
 
@@ -215,36 +224,101 @@ async function syncData(accessToken) {
 
                     console.log(`[Dexcom Sync] Chunk ${i + 1} found ${chunkEgvs.length} EGVs and ${chunkEvents.length} events.`);
 
-                    // 1. Insert EGVs
+                    // 1. Batch Insert EGVs
                     if (chunkEgvs.length > 0) {
                         if (i === 0) stats.latest = chunkEgvs[0].displayTime;
                         stats.count += chunkEgvs.length;
 
-                        for (const r of chunkEgvs) {
-                            if (r.value) {
+                        const batchSize = 500;
+                        for (let j = 0; j < chunkEgvs.length; j += batchSize) {
+                            const batch = chunkEgvs.slice(j, j + batchSize);
+                            const values = [];
+                            const params = [];
+
+                            batch.forEach((r, idx) => {
+                                if (r.value) {
+                                    const base = params.length;
+                                    params.push(r.value, r.systemTime.endsWith("Z") ? r.systemTime : r.systemTime + "Z");
+                                    values.push(`($${base + 1}, $${base + 2}, 'dexcom_api', 'Dexcom API (Live Data)')`);
+                                }
+                            });
+
+                            if (values.length > 0) {
                                 await query(
                                     `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
-                                     VALUES ($1, $2, 'dexcom_api', 'Dexcom API (Live Data)')
+                                     VALUES ${values.join(', ')} 
                                      ON CONFLICT DO NOTHING`,
-                                    [r.value, r.systemTime.endsWith("Z") ? r.systemTime : r.systemTime + "Z"]
+                                    params
                                 );
                             }
                         }
                     }
 
-                    // 2. Insert Events (Carbs/Insulin)
-                    for (const ev of chunkEvents) {
-                        if (ev.eventType === 'carbs' || ev.eventType === 'insulin') {
-                            const carbs = ev.eventType === 'carbs' ? ev.value : null;
-                            const insulin = ev.eventType === 'insulin' ? ev.value : null;
-                            const note = `Dexcom Event: ${ev.eventType}${ev.eventSubType ? ' (' + ev.eventSubType + ')' : ''}`;
+                    // 2. Batch Insert Events (Carbs/Insulin)
+                    if (chunkEvents.length > 0) {
+                        // Aggregate events by timestamp to prevent batch-internal conflicts
+                        const eventMap = new Map();
 
-                            await query(
-                                `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes, carbs_grams, insulin_units)
-                                 VALUES (NULL, $1, 'dexcom_api', $2, $3, $4)
-                                 ON CONFLICT DO NOTHING`,
-                                [ev.systemTime.endsWith("Z") ? ev.systemTime : ev.systemTime + "Z", note, carbs, insulin]
-                            );
+                        chunkEvents.forEach(ev => {
+                            const type = ev.recordType || ev.eventType; // V3 vs V2
+                            if (type !== 'carbs' && type !== 'insulin') return;
+
+                            const time = ev.systemTime.endsWith("Z") ? ev.systemTime : ev.systemTime + "Z";
+
+                            if (!eventMap.has(time)) {
+                                eventMap.set(time, {
+                                    time,
+                                    carbs: 0,
+                                    insulin: 0,
+                                    notes: []
+                                });
+                            }
+
+                            const entry = eventMap.get(time);
+                            const val = Number(ev.value);
+
+                            if (type === 'carbs') {
+                                entry.carbs += val;
+                                entry.notes.push(`Carbs: ${val}g`);
+                            } else if (type === 'insulin') {
+                                entry.insulin += val;
+                                entry.notes.push(`Insulin: ${val}u`);
+                            }
+                        });
+
+                        const uniqueEvents = Array.from(eventMap.values());
+                        console.log(`[Dexcom Sync] Processing ${uniqueEvents.length} aggregated event timestamps.`);
+
+                        const batchSize = 500;
+                        for (let j = 0; j < uniqueEvents.length; j += batchSize) {
+                            const batch = uniqueEvents.slice(j, j + batchSize);
+                            const values = [];
+                            const params = [];
+
+                            batch.forEach((ev) => {
+                                const base = params.length;
+                                // Params: time, note, carbs, insulin
+                                params.push(
+                                    ev.time,
+                                    `Dexcom Event: ${ev.notes.join(', ')}`,
+                                    ev.carbs > 0 ? ev.carbs : null,
+                                    ev.insulin > 0 ? ev.insulin : null
+                                );
+                                // Values: (glucose, measured_at, source, notes, carbs, insulin)
+                                values.push(`(NULL, $${base + 1}, 'dexcom_api', $${base + 2}, $${base + 3}, $${base + 4})`);
+                            });
+
+                            if (values.length > 0) {
+                                await query(
+                                    `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes, carbs_grams, insulin_units)
+                                     VALUES ${values.join(', ')} 
+                                     ON CONFLICT (measured_at) DO UPDATE SET
+                                        carbs_grams = COALESCE(EXCLUDED.carbs_grams, glucose_readings.carbs_grams),
+                                        insulin_units = COALESCE(EXCLUDED.insulin_units, glucose_readings.insulin_units),
+                                        notes = glucose_readings.notes || '; ' || EXCLUDED.notes`,
+                                    params
+                                );
+                            }
                         }
                     }
                 } catch (chunkErr) {

@@ -27,6 +27,14 @@ pool.on('error', (err) => {
 
 // Quick helper for queries
 export async function query(text, params) {
+  const start = Date.now();
   console.log(`[DB] Executing query: ${text.substring(0, 50)}...`);
-  return pool.query(text, params);
+  try {
+    const res = await pool.query(text, params);
+    console.log(`[DB] Query returned in ${Date.now() - start}ms`);
+    return res;
+  } catch (err) {
+    console.error(`[DB] Query failed after ${Date.now() - start}ms:`, err.message);
+    throw err;
+  }
 }

@@ -13,6 +13,7 @@ const OPENAI_API_KEY = rawKey.replace(/^"|"$/g, '').trim();
  * Body: { title: string, data: [] }
  */
 insightsRouter.post("/analyze-week", async (req, res) => {
+    console.log(`[AI] analyze-week requested for: ${req.body.title}`);
     const { title, data } = req.body;
     if (!data || data.length === 0) return res.json({ analysis: "No data provided." });
 
@@ -46,7 +47,7 @@ insightsRouter.post("/analyze-week", async (req, res) => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${OPENAI_API_KEY}`
                 },
-                timeout: 15000
+                timeout: 45000
             }
         );
 
@@ -61,7 +62,7 @@ insightsRouter.post("/analyze-week", async (req, res) => {
 
 insightsRouter.post("/analyze", async (req, res) => {
     const range = req.body.range || "48h";
-    console.log(`[AI] Analysis requested for range: ${range}`);
+    console.log(`[AI] analyze requested for range: ${range} - context: ${req.body.context || 'none'}`);
 
     try {
         let promptData = "";
@@ -137,7 +138,7 @@ insightsRouter.post("/analyze", async (req, res) => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${OPENAI_API_KEY}`
                 },
-                timeout: 15000
+                timeout: 45000
             }
         );
 

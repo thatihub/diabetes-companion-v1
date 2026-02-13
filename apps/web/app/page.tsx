@@ -1,67 +1,74 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import GlucoseForm from "../components/GlucoseForm";
 import GlucoseHistory from "../components/GlucoseHistory";
 import GlucoseChart from "../components/GlucoseChart";
 import InsightCard from "../components/InsightCard";
 import DexcomConnect from "../components/DexcomConnect";
-import { useState, Suspense } from "react";
+import { GlucoseHero } from "../components/GlucoseHero";
+import { useState, Suspense, useEffect } from "react";
+import { api } from "../lib/api";
 
 export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [latestValue, setLatestValue] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const data = await api.get<any[]>("/api/glucose?limit=1");
+        if (data.length > 0) {
+          setLatestValue(data[0].glucose_mgdl);
+        }
+      } catch (err) {
+        console.error("Hero fetch failed", err);
+      }
+    };
+    fetchLatest();
+  }, [refreshKey]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 space-y-10 md:space-y-12 pb-20">
+    <div className="flex flex-col min-h-screen">
+      {/* 1. Status Hero (Flo Inspired) */}
+      <GlucoseHero currentValue={latestValue} />
 
-      {/* Hero Section */}
-      <div className="space-y-3 text-center pt-8">
-        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full mb-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">v1.2.4 — Live</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-          Diabetes <span className="text-blue-500">Companion</span>
-        </h1>
-        <p className="text-zinc-500 text-sm md:text-base font-medium max-w-xs mx-auto">
-          Precision monitoring & AI-driven metabolic insights.
-        </p>
-      </div>
-
-      {/* Main Form */}
-      <GlucoseForm onReadingSaved={() => setRefreshKey(prev => prev + 1)} />
-
-      {/* Charts Section */}
-      <div className="w-full max-w-2xl space-y-6">
+      {/* 2. Metabolic Insights Section */}
+      <div className="px-6 space-y-8">
         <GlucoseChart refreshTrigger={refreshKey} />
-        <div className="flex justify-center md:justify-end px-2">
+
+        <div className="flex justify-center -translate-y-4">
           <Link
             href="/trends"
-            className="group cursor-pointer text-[10px] font-black text-blue-400 hover:text-white flex items-center gap-2 bg-blue-500/10 px-6 py-3 rounded-2xl border border-blue-500/20 hover:bg-blue-600 transition-all shadow-xl active:scale-95 uppercase tracking-[0.2em]"
+            className="flex items-center gap-3 px-8 py-4 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-3xl font-bold uppercase tracking-widest text-[10px] hover:bg-teal-500/20 transition-all shadow-lg active:scale-95"
           >
-            Detailed Longitudinal Trends
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+            Detailed Analytics
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
       </div>
 
-      {/* Integrations & Insights */}
-      <div className="w-full max-w-sm space-y-8">
-        <Suspense fallback={<div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest text-center">Initializing Dexcom...</div>}>
-          <DexcomConnect />
-        </Suspense>
+      {/* 4. Timeline Section (Wellness Feed) */}
+      <div className="pb-10 pt-4">
+        <GlucoseHistory refreshTrigger={refreshKey} />
+      </div>
+
+      {/* 5. Integrations & Intelligence */}
+      <div className="px-6 space-y-10 pb-20">
+        <div className="wellness-card p-6">
+          <Suspense fallback={<div className="h-20 animate-pulse bg-slate-800/30 rounded-3xl"></div>}>
+            <DexcomConnect />
+          </Suspense>
+        </div>
 
         <InsightCard />
       </div>
 
-      {/* History Section */}
-      <GlucoseHistory refreshTrigger={refreshKey} />
-
-      {/* Footer Branding */}
-      <div className="pt-8 opacity-20">
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.5em] text-center">Automata Health Systems</p>
+      {/* 6. Professional Footer */}
+      <div className="py-12 border-t border-slate-800/30 bg-slate-900/10">
+        <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.6em] text-center">
+          GlycoFlow Metabolic Intelligence
+        </p>
       </div>
-    </main>
+    </div>
   );
 }
