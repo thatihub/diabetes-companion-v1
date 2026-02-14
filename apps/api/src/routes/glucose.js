@@ -42,25 +42,40 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
     try {
         let limit = req.query.limit ? Number(req.query.limit) : 1000;
         if (isNaN(limit) || limit < 1) limit = 1000;
+        // Cap limit to prevent massive fetches causing timeouts
         limit = Math.min(limit, 50000);
 
         let hours = req.query.hours ? Number(req.query.hours) : null;
-        if (hours !== null && isNaN(hours)) hours = null;
+        if (hours !== null && (isNaN(hours) || hours <= 0)) hours = null; // Ensure valid positive number
 
-        let queryText = `select * from glucose_readings`;
+        let queryText = `SELECT * FROM glucose_readings`;
         const params = [];
+        const conditions = [];
 
         if (hours) {
-            queryText += ` where measured_at > now() - interval '${hours} hours'`;
+            // Safe to inject number directly as we validated it above, or use parameter
+            // Using direct interval string for simplicity with Postgres syntax
+            conditions.push(`measured_at > now() - interval '${hours} hours'`);
         }
 
-        queryText += ` order by measured_at desc limit $${params.length + 1}`;
+        if (conditions.length > 0) {
+            queryText += ` WHERE ${conditions.join(" AND ")}`;
+        }
+
+        // Add sorting
+        queryText += ` ORDER BY measured_at DESC`;
+
+        // Add limit (always strictly parameterized)
         params.push(limit);
+        queryText += ` LIMIT $${params.length}`;
+
+        console.log(`[DB QUERY] ${queryText} (Params: ${params})`); // Debug log
 
         const result = await query(queryText, params);
-
         res.json(result.rows);
     } catch (err) {
+        // Enhance error for debugging
+        console.error("Database Query Failed:", err);
         next(err);
     }
 });
