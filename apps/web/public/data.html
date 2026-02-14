@@ -137,8 +137,9 @@
     <script>
         async function load() {
             try {
-                // Fetch from Local API (90 days window + high limit)
-                const res = await fetch('http://localhost:4000/api/glucose?hours=2160&limit=50000');
+                // Fetch from dynamic API (works on localhost & production)
+                const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://diabetes-companion-api-14nu.onrender.com';
+                const res = await fetch(`${API_BASE}/api/glucose?hours=2160&limit=50000`);
                 const data = await res.json();
 
                 document.getElementById('loading').style.display = 'none';

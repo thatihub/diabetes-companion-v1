@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metabolic Event Log (Insulin & Carbs)</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            color: #f8fafc;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 6px solid #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .type-insulin {
+            border-left-color: #f43f5e;
+            background: linear-gradient(90deg, rgba(244, 63, 94, 0.1), transparent);
+        }
+
+        .type-carbs {
+            border-left-color: #14b8a6;
+            background: linear-gradient(90deg, rgba(20, 184, 166, 0.1), transparent);
+        }
+
+        .type-combo {
+            border-left-color: #8b5cf6;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), transparent);
+        }
+
+        .time {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .value {
+            font-size: 1.75rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            line-height: 1;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .stat-group {
+            text-align: right;
+        }
+
+        .primary {
+            color: #f8fafc;
+        }
+
+        .accent-insulin {
+            color: #fb7185;
+        }
+
+        .accent-carbs {
+            color: #2dd4bf;
+        }
+
+        #loading {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 40px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h1>Metabolic Event Log</h1>
+        <div id="loading">Syncing Event Stream...</div>
+        <div id="list" class="grid"></div>
+    </div>
+
+    <script>
+        async function load() {
+            try {
+                // Dynamic API Base
+                const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://diabetes-companion-api-14nu.onrender.com';
+                const res = await fetch(`${API_BASE}/api/glucose?hours=2160&limit=50000`);
+                const allData = await res.json();
+
+                // Filter for ONLY rows with Insulin OR Carbs
+                const events = allData.filter(d => (d.insulin_units > 0 || d.carbs_grams > 0));
+
+                const container = document.getElementById('list');
+                document.getElementById('loading').style.display = 'none';
+
+                if (events.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px;">No insulin or carb events found in the last 90 days.</div>';
+                    return;
+                }
+
+                container.innerHTML = events.map(ev => {
+                    const date = new Date(ev.measured_at);
+                    const time = date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' @ ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const hasInsulin = ev.insulin_units > 0;
+                    const hasCarbs = ev.carbs_grams > 0;
+
+                    let typeClass = '';
+                    if (hasInsulin && hasCarbs) typeClass = 'type-combo';
+                    else if (hasInsulin) typeClass = 'type-insulin';
+                    else typeClass = 'type-carbs';
+
+                    return `
+                        <div class="card ${typeClass}">
+                            <div>
+                                <div class="time">${time}</div>
+                                <div class="note">${ev.notes ? ev.notes.replace('Dexcom Event: ', '') : 'Manual Entry'}</div>
+                            </div>
+                            <div class="stat-group">
+                                ${hasCarbs ? `
+                                    <div class="value accent-carbs">${ev.carbs_grams}<span class="label">g</span></div>
+                                    <div class="label" style="color:#2dd4bf">Carbs</div>
+                                ` : ''}
+                                ${hasInsulin ? `
+                                    <div class="${hasCarbs ? 'mt-3' : ''} value accent-insulin">${ev.insulin_units}<span class="label">u</span></div>
+                                    <div class="label" style="color:#fb7185">Insulin</div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                document.getElementById('loading').innerText = "Failed to load events.";
+                console.error(e);
+            }
+        }
+        load();
+    </script>
+</body>
+
+</html>
