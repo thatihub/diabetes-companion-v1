@@ -52,6 +52,11 @@ process.on('unhandledRejection', (reason, promise) => {
         next();
     });
 
+    // Explicit Health Check for Render (Bypassing Router Logic)
+    app.get("/health", (req, res) => {
+        res.status(200).send("OK");
+    });
+
     // Routes
     app.use("/", healthRouter);
     app.use("/api", glucoseRouter);
@@ -76,8 +81,9 @@ process.on('unhandledRejection', (reason, promise) => {
     // Error handler last
     app.use(errorHandler);
 
-    app.listen(PORT, "0.0.0.0", () => {
-        console.log(`✅ Server listening on port ${PORT}`);
+    const HOST = '0.0.0.0';
+    app.listen(PORT, HOST, () => {
+        console.log(`✅ Server listening on ${HOST}:${PORT}`);
     });
 })().catch(err => {
     console.error("FATAL: Server startup failed:", err);
