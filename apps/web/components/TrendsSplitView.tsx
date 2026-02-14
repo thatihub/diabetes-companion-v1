@@ -328,12 +328,12 @@ export default function TrendsSplitView() {
                         onClick={() => setSelectedWeek(null)}
                     ></div>
 
-                    <div className="relative w-full max-w-5xl bg-slate-900 border-t md:border border-white/5 rounded-t-[48px] md:rounded-[56px] p-8 md:p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden max-h-[96vh] flex flex-col animate-in slide-in-from-bottom-20 duration-700">
+                    <div className="relative w-full max-w-5xl bg-slate-900 border-t md:border border-white/5 rounded-t-[48px] md:rounded-[56px] p-8 md:p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden h-[96vh] md:h-[85vh] flex flex-col animate-in slide-in-from-bottom-20 duration-700">
                         {/* Pull bar for mobile */}
-                        <div className="w-16 h-1.5 bg-slate-800 rounded-full mx-auto mb-10 md:hidden opacity-50"></div>
+                        <div className="w-16 h-1.5 bg-slate-800 rounded-full mx-auto mb-10 md:hidden opacity-50 flex-shrink-0"></div>
 
                         {/* Modal Header: Deep Insight Page Title */}
-                        <div className="flex flex-col gap-10 mb-12">
+                        <div className="flex flex-col gap-10 mb-12 flex-shrink-0">
                             <div className="flex items-start justify-between">
                                 <div className="space-y-2">
                                     <h2 className="text-4xl md:text-5xl font-black text-slate-100 tracking-tighter">
@@ -359,7 +359,7 @@ export default function TrendsSplitView() {
                         </div>
 
                         {/* Diagnostic Action Bar - Stacked Layout */}
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-6 flex-shrink-0">
                             <button
                                 onClick={() => {
                                     console.log("Analyze week clicked");
@@ -393,9 +393,9 @@ export default function TrendsSplitView() {
                             )}
                         </div>
 
-                        {/* Chart Area */}
-                        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pr-1 pb-16">
-                            <div className="bg-slate-800/20 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden">
+                        {/* Chart Area - Scrollable Container */}
+                        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pr-1 pb-16 mt-8 overscroll-contain">
+                            <div className="bg-slate-800/20 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden min-h-[400px]">
                                 <GlucoseGraph
                                     data={selectedWeek.points}
                                     title=""
