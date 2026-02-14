@@ -320,82 +320,48 @@ export default function TrendsSplitView() {
                 )
             }
 
-            {/* Enlarged Modal Popup (Diagnostic View) */}
+            {/* Full-Screen Focus View (Redesigned) */}
             {selectedWeek && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 animate-in fade-in duration-500">
-                    <div
-                        className="absolute inset-0 bg-slate-950/95 backdrop-blur-[60px]"
-                        onClick={() => setSelectedWeek(null)}
-                    ></div>
+                <div className="fixed inset-0 z-[200] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-10 duration-500">
 
-                    <div className="relative w-full max-w-5xl bg-slate-900 border-t md:border border-white/5 rounded-t-[48px] md:rounded-[56px] p-8 md:p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden h-[96vh] md:h-[85vh] flex flex-col animate-in slide-in-from-bottom-20 duration-700">
-                        {/* Pull bar for mobile */}
-                        <div className="w-16 h-1.5 bg-slate-800 rounded-full mx-auto mb-10 md:hidden opacity-50 flex-shrink-0"></div>
-
-                        {/* Modal Header: Deep Insight Page Title */}
-                        <div className="flex flex-col gap-10 mb-12 flex-shrink-0">
-                            <div className="flex items-start justify-between">
-                                <div className="space-y-2">
-                                    <h2 className="text-4xl md:text-5xl font-black text-slate-100 tracking-tighter">
-                                        {selectedWeek.title.split(' (')[0]}
-                                    </h2>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
-                                        <span className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.4em]">
-                                            {selectedWeek.title.split(' (')[1]?.replace(')', '')}
-                                        </span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        console.log("Close modal clicked");
-                                        setSelectedWeek(null);
-                                    }}
-                                    className="relative z-50 w-14 h-14 flex items-center justify-center bg-slate-800/40 rounded-full text-slate-500 hover:text-white transition-all border border-white/5 hover:scale-110 active:scale-90"
-                                >
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                </button>
-                            </div>
+                    {/* 1. Sticky Header Bar */}
+                    <div className="flex-shrink-0 px-6 py-4 md:px-12 md:py-8 flex items-center justify-between border-b border-white/5 bg-slate-950/80 backdrop-blur-md z-10 sticky top-0">
+                        <div>
+                            <h2 className="text-3xl md:text-5xl font-black text-slate-100 tracking-tighter">
+                                {selectedWeek.title.split(' (')[0]}
+                            </h2>
+                            <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-1">
+                                {selectedWeek.title.split(' (')[1]?.replace(')', '')}
+                            </p>
                         </div>
+                        <button
+                            onClick={() => setSelectedWeek(null)}
+                            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-white/5 active:scale-90"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
 
-                        {/* Diagnostic Action Bar - Stacked Layout */}
-                        <div className="flex flex-col gap-6 flex-shrink-0">
-                            <button
-                                onClick={() => {
-                                    console.log("Analyze week clicked");
-                                    handleAnalyzeWeek();
-                                }}
-                                disabled={analyzingWeek}
-                                className="group relative w-full flex items-center justify-center gap-3 px-6 py-5 bg-teal-500 text-slate-950 text-[10px] font-bold uppercase tracking-[0.1em] rounded-[24px] hover:shadow-[0_0_50px_rgba(20,184,166,0.3)] transition-all disabled:opacity-50 overflow-hidden active:scale-95 min-h-[60px]"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <span className="relative z-10 flex items-center gap-2">
-                                    {analyzingWeek ? (
-                                        <><span className="animate-spin text-lg">✨</span> Analyzing Patterns...</>
-                                    ) : (
-                                        <><span className="text-lg">✨</span> Generate Week Diagnosis</>
-                                    )}
-                                </span>
-                            </button>
+                    {/* 2. Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth p-6 md:p-12 pb-32">
+                        <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
 
+                            {/* Summary Stats Row */}
                             {selectedWeek.summary && (
-                                <div className="flex-1 flex items-center justify-around gap-4 px-10 py-7 bg-slate-800/60 rounded-[32px] border border-white/10 backdrop-blur-xl min-h-[84px] shadow-inner">
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.25em] block mb-2">Avg Carbs</span>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-slate-900/50 p-6 rounded-[32px] border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] mb-2">Avg Carbs</span>
                                         <span className="text-3xl font-black text-teal-400 tracking-tighter">{selectedWeek.summary.carbs}g</span>
                                     </div>
-                                    <div className="w-px h-12 bg-white/5"></div>
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.25em] block mb-2">Avg Insulin</span>
+                                    <div className="bg-slate-900/50 p-6 rounded-[32px] border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] mb-2">Avg Insulin</span>
                                         <span className="text-3xl font-black text-rose-400 tracking-tighter">{selectedWeek.summary.insulin}u</span>
                                     </div>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Chart Area - Scrollable Container */}
-                        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pr-1 pb-16 mt-8 overscroll-contain">
-                            <div className="bg-slate-800/20 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden min-h-[400px]">
+                            {/* Main Graph Container */}
+                            <div className="bg-slate-900/30 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden min-h-[400px]">
                                 <GlucoseGraph
                                     data={selectedWeek.points}
                                     title=""
@@ -404,32 +370,31 @@ export default function TrendsSplitView() {
                                 />
                             </div>
 
+                            {/* Action Button */}
+                            <button
+                                onClick={handleAnalyzeWeek}
+                                disabled={analyzingWeek}
+                                className="w-full py-6 bg-teal-500 text-slate-950 font-black uppercase tracking-[0.2em] rounded-[32px] shadow-[0_0_40px_rgba(20,184,166,0.2)] hover:shadow-[0_0_60px_rgba(20,184,166,0.4)] transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                {analyzingWeek ? " analyzing..." : "Generate Diagnosis"}
+                            </button>
+
+                            {/* AI Analysis Result */}
                             {weekAnalysis && (
-                                <div className="mt-12 group relative">
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-[40px] blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200"></div>
-                                    <div className="relative wellness-card p-10 md:p-12 border-white/10">
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center text-slate-950 shadow-[0_0_20px_rgba(20,184,166,0.5)]">
-                                                <span className="text-2xl font-black">AI</span>
+                                <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
+                                    <div className="relative p-1 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 rounded-[40px]">
+                                        <div className="bg-slate-900 p-8 md:p-12 rounded-[38px] border border-teal-500/20">
+                                            <h4 className="flex items-center gap-3 text-teal-400 font-black text-sm uppercase tracking-[0.25em] mb-8">
+                                                <span className="text-2xl">✨</span> Intelligence Report
+                                            </h4>
+                                            <div className="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
+                                                {weekAnalysis}
                                             </div>
-                                            <div>
-                                                <h4 className="text-slate-100 text-lg font-black tracking-tight">Intelligence Scan</h4>
-                                                <p className="text-teal-400 text-[9px] font-black uppercase tracking-[0.3em]">Full Pattern Diagnosis Complete</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
-                                            {weekAnalysis}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="mt-12 p-10 bg-slate-800/10 rounded-[40px] border border-white/5 opacity-60">
-                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4">Diagnostic Context</h4>
-                                <p className="text-slate-500 text-xs leading-relaxed font-medium">
-                                    This visualization synthesizes high-resolution biometric telemetry. Teal gradients map to target stability; vertical pillars denote exogenous insulin boluses and glycemic loading events.
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
