@@ -31,8 +31,8 @@ dexcomRouter.get("/login", (req, res) => {
         return res.status(500).send("Missing DEXCOM_CLIENT_ID or DEXCOM_REDIRECT_URI in env");
     }
 
-    const scope = "offline_access";
-    const loginUrl = `${DEX_BASE_URL}/v2/oauth2/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}`;
+    const scope = "offline_access egv calibration device statistics event";
+    const loginUrl = `${DEX_BASE_URL}/v2/oauth2/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`;
 
     logDexcom("CONNECT_REDIRECT_CREATED", { url: loginUrl, redirect_uri: redirectUri });
     res.redirect(loginUrl);
@@ -102,6 +102,104 @@ dexcomRouter.get("/callback", async (req, res) => {
         res.redirect(`${frontendUrl}?dexcom_error=AUTH_FAILED`);
     }
 });
+
+/**
+ * 3. GET /api/dexcom/status
+ */
+dexcomRouter.get("/status", async (req, res) => {
+    if (!fs.existsSync(TOKEN_FILE)) {
+        return res.json({ connected: false });
+    }
+    try {
+        const tokens = JSON.parse(fs.readFileSync(TOKEN_FILE, "utf8"));
+        const isExpired = Date.now() > tokens.expires_at;
+        res.json({
+            connected: true,
+            expires_at: new Date(tokens.expires_at).toISOString(),
+            is_expired: isExpired,
+            last_updated: tokens.updated_at
+        });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to read token file" });
+    }
+});
+
+/**
+ * 4. GET /api/dexcom/sync
+ */
+dexcomRouter.get("/sync", async (req, res) => {
+    try {
+        const token = await getValidToken();
+        if (!token) return res.status(401).json({ error: "Not connected to Dexcom" });
+
+        logDexcom("MANUAL_SYNC_TRIGGERED", { message: "Sync initiated via /api/dexcom/sync" });
+
+        // Trigger background sync
+        syncData(token).then(stats => {
+            logDexcom("MANUAL_SYNC_COMPLETED", stats);
+        }).catch(err => {
+            logDexcom("MANUAL_SYNC_FAILED", { error: err.message });
+        });
+
+        res.json({ message: "Sync started in background" });
+    } catch (err) {
+        logDexcom("MANUAL_SYNC_ERROR", { error: err.message });
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * Helper: Refresh Token
+ */
+async function refreshDexcomToken(refreshToken) {
+    logDexcom("REFRESH_TOKEN_REQUEST", { message: "Attempting to refresh access token" });
+    try {
+        const params = new URLSearchParams({
+            client_id: process.env.DEXCOM_CLIENT_ID,
+            client_secret: process.env.DEXCOM_CLIENT_SECRET,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token"
+        });
+
+        const res = await axios.post(`${DEX_BASE_URL}/v2/oauth2/token`, params.toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const { access_token, refresh_token: new_refresh_token, expires_in } = res.data;
+        const tokenData = {
+            access_token,
+            refresh_token: new_refresh_token || refreshToken, // Fallback to old if not provided
+            expires_at: Date.now() + (expires_in * 1000),
+            updated_at: new Date().toISOString()
+        };
+        fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokenData, null, 2));
+        logDexcom("REFRESH_TOKEN_SUCCESS", { expires_in });
+        return access_token;
+    } catch (err) {
+        logDexcom("REFRESH_TOKEN_FAILURE", { error: err.response?.data || err.message });
+        throw err;
+    }
+}
+
+/**
+ * Helper: Get Valid Token (handles refresh)
+ */
+async function getValidToken() {
+    if (!fs.existsSync(TOKEN_FILE)) return null;
+    let tokens;
+    try {
+        tokens = JSON.parse(fs.readFileSync(TOKEN_FILE, "utf8"));
+    } catch (e) {
+        return null;
+    }
+
+    // Buffer of 5 minutes
+    if (Date.now() < tokens.expires_at - (5 * 60 * 1000)) {
+        return tokens.access_token;
+    }
+
+    return await refreshDexcomToken(tokens.refresh_token);
+}
 
 /**
  * Sync Logic
