@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { api } from "../lib/api";
 import GlucoseGraph from "./GlucoseGraph";
+import SpeakButton from "./SpeakButton";
 
 type Range = "7d" | "14d" | "30d" | "90d";
 
@@ -264,6 +265,9 @@ export default function TrendsSplitView() {
                         </button>
                     </div>
                     <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                        <div className="mb-4 flex justify-end">
+                            <SpeakButton text={analysis} />
+                        </div>
                         {analysis}
                     </div>
                 </div>
@@ -413,6 +417,7 @@ export default function TrendsSplitView() {
                                     {weekAnalysis && (
                                         <div className="mt-4 max-h-48 overflow-y-auto rounded-2xl border border-teal-500/20 bg-slate-900 p-4">
                                             <div className="mb-3 flex items-center justify-end">
+                                                <SpeakButton text={weekAnalysis} className="mr-2" />
                                                 <button
                                                     onClick={() => setWeekAnalysis(null)}
                                                     className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-colors hover:border-slate-500 hover:text-white"

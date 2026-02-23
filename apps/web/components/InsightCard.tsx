@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "../lib/api";
+import SpeakButton from "./SpeakButton";
 
 interface InsightCardProps {
     startDate?: string | Date;
@@ -82,6 +83,9 @@ export default function InsightCard({
 
             {analysis && (
                 <div className="mt-2 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="flex justify-end">
+                        <SpeakButton text={analysis} />
+                    </div>
                     <div className="text-zinc-200 text-xs md:text-sm leading-relaxed whitespace-pre-line bg-black/40 p-5 rounded-2xl border border-white/5 shadow-inner">
                         {analysis}
                     </div>
