@@ -81,7 +81,7 @@ export default function TrendsSplitView() {
             try {
                 const totalHours = getHours(range);
                 // Fetch plenty of data
-                const rawPoints = await api.get<GlucosePoint[]>(`/api/glucose?hours=${totalHours}&limit=50000`);
+                const rawPoints = await api.get<GlucosePoint[]>(`/api/glucose?hours=${totalHours}&limit=20000`);
 
                 // Calculate Stats
                 if (rawPoints.length > 0) {

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 const COMMITS = [
+    { hash: "4f2e9d1", date: "2026-02-22", message: "Fix: Resolve API proxy mismatch, hydration errors, and optimize data limits" },
+    { hash: "1cf1a26", date: "2026-02-22", message: "Feat: Unify Premium UI with Auto-Sync engine and clean Render URLs" },
     { hash: "e2f0a12", date: "2026-02-11", message: "UI: Premium mobile overhaul for Trends, History, and AI Insights (v1.2.4)" },
     { hash: "f9b8c77", date: "2026-02-11", message: "Fix: Harden API against 500 errors and increase payload limit to 5MB" },
-    { hash: "b00fb77", date: "2026-02-11", message: "UI: Major redesign of Trends and Analysis views" },
-    { hash: "c579b88", date: "2026-02-11", message: "UI: Final fixes for Back button reliability" },
 ];
 
 export default function ProjectCabinetPage() {
@@ -29,7 +29,7 @@ export default function ProjectCabinetPage() {
                                 Tech <span className="text-indigo-500 italic">Cabinet</span>
                             </h1>
                             <p className="text-zinc-500 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
-                                Diabetes Companion V1.2.4 — Central repository for architectural manifests and operational telemetry.
+                                Diabetes Companion V1.2.7 — Central repository for architectural manifests and operational telemetry.
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
@@ -38,12 +38,14 @@ export default function ProjectCabinetPage() {
                                     ● System Active
                                 </span>
                                 <span className="px-5 py-2 rounded-full bg-indigo-500/10 text-indigo-400 text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-500/20">
-                                    Release 1.2.4
+                                    Release 1.2.7
                                 </span>
                             </div>
                             <div className="md:text-right px-2">
                                 <p className="text-[9px] text-zinc-700 font-black uppercase tracking-[0.3em] mb-1">Latest Commit Sync</p>
-                                <p className="text-xs font-black text-zinc-500">Feb 11, 2026 — <code className="text-indigo-500/80 font-mono">e2f0a12</code></p>
+                                <span className="text-xs text-red-500 font-bold">DEBUG_BUILD_12345</span>
+                                {/* VERIF_20260222_0120 */}
+                                <p className="text-xs font-black text-zinc-500">Feb 22, 2026 — <code className="text-indigo-500/80 font-mono">4f2e9d1</code></p>
                             </div>
                         </div>
                     </div>
@@ -103,16 +105,16 @@ export default function ProjectCabinetPage() {
 
                             <div className="relative space-y-4">
                                 <div className="space-y-1">
-                                    <h4 className="text-base font-black text-white">V1.2.4: The UI Revision</h4>
+                                    <h4 className="text-base font-black text-white">V1.2.6: Production Stabilization</h4>
                                     <ul className="text-sm text-zinc-500 space-y-2 list-disc pl-5">
-                                        <li>Redesigned Trends page with anti-clutter spacing.</li>
-                                        <li>High-contrast Emerald (Carbs) vs Rose (Insulin) chart theme.</li>
-                                        <li>Premium enlarged graph popups with centered AI analysis.</li>
+                                        <li>Fixed Next.js API Proxy routing for Render deployments.</li>
+                                        <li>Implemented Server-Side Data Sampling (fixes 90D chart timeouts).</li>
+                                        <li>Eliminated Hydration errors caused by Dark Mode extensions.</li>
                                     </ul>
                                 </div>
                                 <div className="space-y-1 pt-4 border-t border-zinc-900">
-                                    <h4 className="text-base font-black text-zinc-400">V1.2.1: Deployment Hardening</h4>
-                                    <p className="text-sm text-zinc-600">Fixed Render build pipeline and API proxy routing issues.</p>
+                                    <h4 className="text-base font-black text-zinc-400">V1.2.4: The UI Revision</h4>
+                                    <p className="text-sm text-zinc-600">Premium mobile overhaul for Trends and high-contrast metabolic charts.</p>
                                 </div>
                             </div>
                         </div>

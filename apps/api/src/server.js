@@ -52,16 +52,16 @@ process.on('unhandledRejection', (reason, promise) => {
         next();
     });
 
-    // Explicit Health Check for Render (Bypassing Router Logic)
-    app.get("/health", (req, res) => {
-        res.status(200).send("OK");
-    });
-
     // Routes
     app.use("/", healthRouter);
     app.use("/api", glucoseRouter);
     app.use("/api/insights", insightsRouter);
     app.use("/api/dexcom", dexcomRouter);
+
+    // Explicit Health Check for Render (Fallback)
+    app.get("/health", (req, res) => {
+        res.status(200).send("OK");
+    });
 
     app.get("/", (req, res) => {
         res.json({ message: "Diabetes Companion API is running", env: process.env.NODE_ENV });

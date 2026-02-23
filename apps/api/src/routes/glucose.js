@@ -53,8 +53,6 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
         const conditions = [];
 
         if (hours) {
-            // Safe to inject number directly as we validated it above, or use parameter
-            // Using direct interval string for simplicity with Postgres syntax
             conditions.push(`measured_at > now() - interval '${hours} hours'`);
         }
 
@@ -65,16 +63,31 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
         // Add sorting
         queryText += ` ORDER BY measured_at DESC`;
 
-        // Add limit (always strictly parameterized)
+        // Add limit
         params.push(limit);
         queryText += ` LIMIT $${params.length}`;
 
-        console.log(`[DB QUERY] ${queryText} (Params: ${params})`); // Debug log
+        console.log(`[DB QUERY] ${queryText} (Params: ${params})`);
 
         const result = await query(queryText, params);
-        res.json(result.rows);
+        let rows = result.rows;
+
+        // --- NEW: Intelligently sample data for large payloads to prevent timeouts ---
+        // If we have more than 2000 points, we sample based on the range density
+        if (rows.length > 2000) {
+            let sampleRate = 1;
+            if (hours > 720) sampleRate = 12;      // 90 days: 1 reading per hour (every 12th)
+            else if (hours > 168) sampleRate = 4;  // 7-30 days: 1 reading per 20 mins (every 4th)
+            else if (hours > 48) sampleRate = 2;   // 2-7 days: 1 reading per 10 mins (every 2nd)
+
+            if (sampleRate > 1) {
+                console.log(`[API] Large range detected (${hours}h). Sampling 1 out of every ${sampleRate} rows.`);
+                rows = rows.filter((_, idx) => idx % sampleRate === 0);
+            }
+        }
+
+        res.json(rows);
     } catch (err) {
-        // Enhance error for debugging
         console.error("Database Query Failed:", err);
         next(err);
     }

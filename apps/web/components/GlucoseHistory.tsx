@@ -17,6 +17,11 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
     const [readings, setReadings] = useState<GlucoseReading[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const fetchReadings = async () => {
         try {
@@ -68,7 +73,7 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                     onClick={fetchReadings}
                     className="p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-full border border-slate-700/50 text-teal-400 transition-all active:scale-90"
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" suppressHydrationWarning={true}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
                 </button>
             </div>
 
@@ -93,8 +98,8 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                                     {reading.meal_tag ? reading.meal_tag.replace('_', ' ') : 'General Log'}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                        {new Date(reading.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" suppressHydrationWarning={true}>
+                                        {isMounted ? new Date(reading.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                     </span>
                                     {reading.insulin_units && (
                                         <span className="px-2 py-0.5 bg-rose-500/10 text-rose-400 text-[8px] font-black uppercase rounded-full">💉 {reading.insulin_units}u</span>

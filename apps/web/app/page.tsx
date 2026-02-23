@@ -42,7 +42,7 @@ export default function Home() {
             className="flex items-center gap-3 px-8 py-4 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-3xl font-bold uppercase tracking-widest text-[10px] hover:bg-teal-500/20 transition-all shadow-lg active:scale-95"
           >
             Detailed Analytics
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" suppressHydrationWarning={true}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
       </div>

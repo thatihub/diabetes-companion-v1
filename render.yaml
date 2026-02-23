@@ -34,6 +34,7 @@ services:
     runtime: node
     plan: free
     region: oregon
+    rootDir: apps/web
     
     # Build the Next.js app
     buildCommand: npm install && npm run build:web

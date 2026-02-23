@@ -20,7 +20,7 @@ export default function QuickLinksPage() {
                     <h1 className="text-xl md:text-2xl font-black text-white tracking-tighter uppercase italic">
                         Ops <span className="text-emerald-500">Manifest</span>
                     </h1>
-                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest leading-none mt-1">V1.2.4 System Links</span>
+                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest leading-none mt-1">V1.2.6 System Links</span>
                 </div>
             </div>
 

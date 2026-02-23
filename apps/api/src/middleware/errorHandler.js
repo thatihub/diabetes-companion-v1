@@ -11,9 +11,11 @@ export function errorHandler(err, req, res, next) {
         method: req.method
     };
 
-    if (process.env.NODE_ENV !== 'production') {
-        response.stack = err.stack;
+    // If it looks like a DB error, add more context
+    if (message.includes("database") || message.includes("connection") || message.includes("terminat")) {
+        response.hint = "Check DATABASE_URL and Supabase connection limits.";
     }
 
+    // Always show message in this phase of debugging
     res.status(status).json(response);
 }

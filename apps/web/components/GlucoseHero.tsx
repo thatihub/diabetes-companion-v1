@@ -36,7 +36,7 @@ export const GlucoseHero: React.FC<GlucoseHeroProps> = ({
 
             {/* Main Circle Gauge */}
             <div className="relative w-72 h-72 flex items-center justify-center">
-                <svg className="absolute w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 300 300">
+                <svg className="absolute w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 300 300" suppressHydrationWarning={true}>
                     {/* Background Track */}
                     <circle
                         cx="150"
@@ -46,6 +46,7 @@ export const GlucoseHero: React.FC<GlucoseHeroProps> = ({
                         stroke="rgba(255,255,255,0.05)"
                         strokeWidth="12"
                         strokeLinecap="round"
+                        suppressHydrationWarning={true}
                     />
                     {/* Progress Overlay */}
                     <circle
@@ -57,6 +58,7 @@ export const GlucoseHero: React.FC<GlucoseHeroProps> = ({
                         strokeWidth="12"
                         strokeDasharray={getStrokeDashArray(currentValue || 100)}
                         strokeLinecap="round"
+                        suppressHydrationWarning={true}
                         className={`${getStatusColor(currentValue)} transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,0,0,0.5)]`}
                     />
                 </svg>
