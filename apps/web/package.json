@@ -2,6 +2,9 @@
   "name": "diabetes-companion-v1",
   "version": "1.2.8",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev -p 3001 -H 127.0.0.1",
     "build": "next build",
