@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../lib/api";
 import GlucoseGraph from "./GlucoseGraph";
 
@@ -15,21 +16,41 @@ type GlucosePoint = {
     timestamp?: number;
 };
 
+type WeekSummary = { carbs: number; insulin: number };
+type WeekData = { title: string; points: GlucosePoint[]; summary?: WeekSummary };
+type WeekChunk = {
+    title: string;
+    startMs: number;
+    endMs: number;
+    raw: GlucosePoint[];
+    points: GlucosePoint[];
+    summary: WeekSummary;
+};
+
 export default function TrendsSplitView() {
     const [range, setRange] = useState<Range>("7d");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [weeklyData, setWeeklyData] = useState<{ title: string, points: GlucosePoint[], summary?: { carbs: number, insulin: number } }[]>([]);
+    const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
     const [stats, setStats] = useState({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
-    const [selectedWeek, setSelectedWeek] = useState<{ title: string, points: GlucosePoint[], summary?: { carbs: number, insulin: number } } | null>(null);
+    const [selectedWeek, setSelectedWeek] = useState<WeekData | null>(null);
     const [weekAnalysis, setWeekAnalysis] = useState<string | null>(null);
     const [analyzingWeek, setAnalyzingWeek] = useState(false);
 
     // Reset week analysis when switching weeks
     useEffect(() => {
         setWeekAnalysis(null);
+    }, [selectedWeek]);
+
+    useEffect(() => {
+        if (!selectedWeek) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
     }, [selectedWeek]);
 
     const ranges: Range[] = ["7d", "14d", "30d", "90d"];
@@ -40,8 +61,9 @@ export default function TrendsSplitView() {
         try {
             const res = await api.post<{ analysis: string }>("/api/insights/analyze", { range });
             setAnalysis(res.analysis);
-        } catch (e: any) {
-            setAnalysis(`Failed to generate insights: ${e.message || 'Unknown error'}`);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Unknown error";
+            setAnalysis(`Failed to generate insights: ${message}`);
         } finally {
             setAnalyzing(false);
         }
@@ -57,8 +79,9 @@ export default function TrendsSplitView() {
                 data: selectedWeek.points
             });
             setWeekAnalysis(res.analysis);
-        } catch (e: any) {
-            setWeekAnalysis(`Failed to generate weekly insights: ${e.message || 'Unknown error'}`);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Unknown error";
+            setWeekAnalysis(`Failed to generate weekly insights: ${message}`);
         } finally {
             setAnalyzingWeek(false);
         }
@@ -114,7 +137,7 @@ export default function TrendsSplitView() {
 
                 const nowMs = processingNow.getTime();
                 const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-                const chunks: any[] = [];
+                const chunks: WeekChunk[] = [];
 
                 // Initialize chunks
                 const weeks = Math.ceil(totalHours / (24 * 7));
@@ -143,22 +166,22 @@ export default function TrendsSplitView() {
                 });
 
                 // Finalize chunks (reverse and sample for performance)
-                chunks.forEach(chunk => {
+                chunks.forEach((chunk) => {
                     if (chunk.raw.length > 0) {
-                        const totalCarbs = chunk.raw.reduce((acc: number, p: any) => acc + (Number(p.carbs_grams) || 0), 0);
-                        const totalInsulin = chunk.raw.reduce((acc: number, p: any) => acc + (Number(p.insulin_units) || 0), 0);
+                        const totalCarbs = chunk.raw.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
+                        const totalInsulin = chunk.raw.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
                         chunk.summary = {
                             carbs: Number((totalCarbs / 7).toFixed(1)),
                             insulin: Number((totalInsulin / 7).toFixed(1))
                         };
 
                         // Intelligent Sampling for Chart Performance
-                        let toProcess = chunk.raw.reverse();
+                        const toProcess = chunk.raw.reverse();
                         const sampleRate = Math.ceil(toProcess.length / 800); // Target ~800 pts per week for smoothness
 
                         chunk.points = toProcess
-                            .filter((_: any, idx: number) => idx % sampleRate === 0)
-                            .map((p: any) => ({
+                            .filter((_, idx) => idx % sampleRate === 0)
+                            .map((p) => ({
                                 ...p,
                                 insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
                                 carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
@@ -209,16 +232,16 @@ export default function TrendsSplitView() {
                     <button
                         onClick={handleAnalyze}
                         disabled={analyzing}
-                        className="group relative w-full flex items-center justify-center gap-4 px-10 py-6 bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-[0.3em] rounded-[32px] hover:bg-teal-500 hover:text-slate-950 transition-all duration-300 disabled:opacity-50 overflow-hidden active:scale-95 shadow-xl"
+                        className="ai-insight-btn group relative flex items-center justify-center gap-3"
                     >
                         <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         {analyzing ? (
                             <>
-                                <span className="animate-spin text-xl">✨</span> Computing Metabolic Intelligence...
+                                <span className="animate-spin text-xl">✨</span> Generating AI Insight...
                             </>
                         ) : (
                             <>
-                                <span className="text-xl">✨</span> Generate Pattern Scan
+                                <span className="text-xl">✨</span> Generate AI Insight
                             </>
                         )}
                     </button>
@@ -320,85 +343,95 @@ export default function TrendsSplitView() {
                 )
             }
 
-            {/* Full-Screen Focus View (Redesigned) */}
-            {selectedWeek && (
-                <div className="fixed inset-0 z-[200] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-10 duration-500">
-
-                    {/* 1. Sticky Header Bar */}
-                    <div className="flex-shrink-0 px-6 py-4 md:px-12 md:py-8 flex items-center justify-between border-b border-white/5 bg-slate-950/80 backdrop-blur-md z-10 sticky top-0">
-                        <div>
-                            <h2 className="text-3xl md:text-5xl font-black text-slate-100 tracking-tighter">
-                                {selectedWeek.title.split(' (')[0]}
-                            </h2>
-                            <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-1">
-                                {selectedWeek.title.split(' (')[1]?.replace(')', '')}
-                            </p>
+            {/* Weekly Focus Dialog */}
+            {selectedWeek && typeof window !== "undefined" && createPortal((
+                <div className="fixed left-0 top-0 z-[9999] h-[100dvh] w-screen bg-slate-950/95 backdrop-blur-sm p-3 md:p-6">
+                    <div className="mx-auto flex h-full w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-slate-700/70 bg-slate-950 shadow-[0_30px_80px_rgba(2,6,23,0.7)]">
+                        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-4 md:px-8 md:py-6">
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-black tracking-tight text-slate-100 md:text-4xl">
+                                    {selectedWeek.title.split(" (")[0]}
+                                </h2>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                                    {selectedWeek.title.split(" (")[1]?.replace(")", "")}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    {selectedWeek.points.length} readings captured
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedWeek(null)}
+                                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-400 transition-all hover:border-slate-500 hover:text-white active:scale-95"
+                                aria-label="Close weekly view"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setSelectedWeek(null)}
-                            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-white/5 active:scale-90"
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    </div>
 
-                    {/* 2. Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth p-6 md:p-12 pb-32">
-                        <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
-
-                            {/* Summary Stats Row */}
-                            {selectedWeek.summary && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-slate-900/50 p-6 rounded-[32px] border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] mb-2">Avg Carbs</span>
-                                        <span className="text-3xl font-black text-teal-400 tracking-tighter">{selectedWeek.summary.carbs}g</span>
+                        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-6">
+                            <div className="flex min-h-full flex-col gap-4">
+                                {selectedWeek.summary && (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="rounded-2xl border border-teal-700/30 bg-teal-950/20 px-4 py-4">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300/70">Avg Carbs</p>
+                                            <p className="mt-2 text-3xl font-black tracking-tight text-teal-300">{selectedWeek.summary.carbs}g</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-rose-700/30 bg-rose-950/20 px-4 py-4">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-300/70">Avg Insulin</p>
+                                            <p className="mt-2 text-3xl font-black tracking-tight text-rose-300">{selectedWeek.summary.insulin}u</p>
+                                        </div>
                                     </div>
-                                    <div className="bg-slate-900/50 p-6 rounded-[32px] border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] mb-2">Avg Insulin</span>
-                                        <span className="text-3xl font-black text-rose-400 tracking-tighter">{selectedWeek.summary.insulin}u</span>
+                                )}
+
+                                <div className="rounded-[28px] border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-3 md:p-5">
+                                    <div className="rounded-[20px] border border-slate-800/80 bg-slate-950/60 p-2 md:p-4">
+                                        <GlucoseGraph
+                                            data={selectedWeek.points}
+                                            title=""
+                                            height={320}
+                                            minimal={true}
+                                        />
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Main Graph Container */}
-                            <div className="bg-slate-900/30 rounded-[40px] p-4 md:p-8 border border-white/5 overflow-hidden min-h-[400px]">
-                                <GlucoseGraph
-                                    data={selectedWeek.points}
-                                    title=""
-                                    height={400}
-                                    minimal={true}
-                                />
-                            </div>
-
-                            {/* Action Button */}
-                            <button
-                                onClick={handleAnalyzeWeek}
-                                disabled={analyzingWeek}
-                                className="w-full py-6 bg-teal-500 text-slate-950 font-black uppercase tracking-[0.2em] rounded-[32px] shadow-[0_0_40px_rgba(20,184,166,0.2)] hover:shadow-[0_0_60px_rgba(20,184,166,0.4)] transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                {analyzingWeek ? " analyzing..." : "Generate Diagnosis"}
-                            </button>
-
-                            {/* AI Analysis Result */}
-                            {weekAnalysis && (
-                                <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
-                                    <div className="relative p-1 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 rounded-[40px]">
-                                        <div className="bg-slate-900 p-8 md:p-12 rounded-[38px] border border-teal-500/20">
-                                            <h4 className="flex items-center gap-3 text-teal-400 font-black text-sm uppercase tracking-[0.25em] mb-8">
-                                                <span className="text-2xl">✨</span> Intelligence Report
-                                            </h4>
-                                            <div className="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
+                                <div className="rounded-[24px] border border-slate-800 bg-slate-900/60 p-4 md:p-5">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+                                            Weekly Insights
+                                        </h3>
+                                        <button
+                                            onClick={handleAnalyzeWeek}
+                                            disabled={analyzingWeek}
+                                            className="ai-insight-btn sm:w-auto"
+                                        >
+                                            {analyzingWeek ? "Generating AI Insight..." : "Generate AI Insight"}
+                                        </button>
+                                    </div>
+                                    <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                                        AI reads glucose variability, carb and insulin balance, and timing patterns for this week.
+                                    </p>
+                                    {weekAnalysis && (
+                                        <div className="mt-4 max-h-48 overflow-y-auto rounded-2xl border border-teal-500/20 bg-slate-900 p-4">
+                                            <div className="mb-3 flex items-center justify-end">
+                                                <button
+                                                    onClick={() => setWeekAnalysis(null)}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-colors hover:border-slate-500 hover:text-white"
+                                                    aria-label="Close insight"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                            <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-200">
                                                 {weekAnalysis}
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
-
+                            </div>
                         </div>
                     </div>
                 </div>
-            )}
+            ), document.body)}
         </div>
     );
 }

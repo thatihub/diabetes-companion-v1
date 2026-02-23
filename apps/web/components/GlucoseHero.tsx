@@ -30,12 +30,12 @@ export const GlucoseHero: React.FC<GlucoseHeroProps> = ({
     };
 
     return (
-        <div className="flex flex-col items-center justify-center py-10 px-6 relative">
+        <div className="flex flex-col items-center justify-center py-8 md:py-10 px-2 md:px-4 relative">
             {/* Background Decorative Gradient */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -z-10"></div>
 
             {/* Main Circle Gauge */}
-            <div className="relative w-72 h-72 flex items-center justify-center">
+            <div className="relative w-72 h-72 md:w-80 md:h-80 flex items-center justify-center">
                 <svg className="absolute w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 300 300" suppressHydrationWarning={true}>
                     {/* Background Track */}
                     <circle
@@ -66,7 +66,7 @@ export const GlucoseHero: React.FC<GlucoseHeroProps> = ({
                 {/* Content Inside Circle */}
                 <div className="text-center z-10">
                     <p className="text-slate-500 text-sm font-medium tracking-widest uppercase mb-1">Current</p>
-                    <h2 className="text-7xl font-bold tracking-tighter tabular-nums flex items-baseline justify-center">
+                    <h2 className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums flex items-baseline justify-center">
                         {currentValue || "--"}
                         <span className="text-sm font-medium text-slate-500 ml-1 tracking-normal">mg/dL</span>
                     </h2>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Using Inter for a clean, modern look
+import Link from "next/link";
 import "./globals.css";
 // Build Timestamp: 2026-02-11T11:29:00Z
 
@@ -22,18 +23,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[#0f172a] text-[#f1f5f9]`}>
-        <div className="mx-auto max-w-md min-h-screen bg-slate-900/50 shadow-2xl overflow-hidden border-x border-slate-800/50 backdrop-blur-3xl">
-          {/* Elegant top bar */}
-          <div className="w-full bg-slate-900/40 backdrop-blur-md border-b border-slate-800/50 p-3 flex justify-between items-center px-6 sticky top-0 z-50">
-            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">GlycoFlow V2</span>
-            <div className="flex items-center gap-4">
-              <a href="/project-cabinet" className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-1.5 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-500/50"></span>
+        <div className="min-h-screen">
+          <div className="sticky top-0 z-50 border-b border-slate-800/70 bg-slate-950/85 backdrop-blur-md">
+            <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-6">
+              <Link href="/" className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-300 hover:text-white">
+                GlycoFlow V2
+              </Link>
+              <Link href="/project-cabinet" className="app-btn">
                 Cabinet
-              </a>
+              </Link>
             </div>
           </div>
-          <main className="pb-24">
+          <main className="pb-16">
             {children}
           </main>
         </div>

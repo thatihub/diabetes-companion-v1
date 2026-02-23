@@ -71,7 +71,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const ranges: Range[] = ["24h", "3d", "7d", "14d", "30d", "90d"];
 
     return (
-        <div className="wellness-card p-6 mb-8 mx-4">
+        <div className="wellness-card mb-2 p-5 md:p-7">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 className="text-slate-100 text-lg font-bold tracking-tight">Clarity View</h3>
@@ -92,12 +92,12 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             </div>
 
             {!isMounted || (loading && data.length === 0) ? (
-                <div className="h-64 flex flex-col items-center justify-center text-slate-600 gap-3">
+                <div className="h-[18rem] md:h-[22rem] flex flex-col items-center justify-center text-slate-600 gap-3">
                     <div className="w-8 h-8 border-4 border-slate-700 border-t-teal-400 rounded-full animate-spin"></div>
                     <span className="text-xs font-bold tracking-widest uppercase">Analyzing Data...</span>
                 </div>
             ) : error ? (
-                <div className="h-64 flex flex-col items-center justify-center gap-4 bg-rose-500/5 rounded-3xl border border-rose-500/10">
+                <div className="h-[18rem] md:h-[22rem] flex flex-col items-center justify-center gap-4 bg-rose-500/5 rounded-3xl border border-rose-500/10">
                     <p className="text-rose-400 text-xs font-bold uppercase tracking-widest">⚠️ Sync Failed</p>
                     <button
                         onClick={() => setRange(range)}
@@ -107,11 +107,11 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                     </button>
                 </div>
             ) : data.length < 2 ? (
-                <div className="h-64 flex items-center justify-center text-slate-600 text-[10px] font-bold uppercase tracking-widest bg-slate-900/20 rounded-3xl">
+                <div className="h-[18rem] md:h-[22rem] flex items-center justify-center text-slate-600 text-[10px] font-bold uppercase tracking-widest bg-slate-900/20 rounded-3xl">
                     Awaiting more readings...
                 </div>
             ) : (
-                <div className="h-64 w-full -ml-2">
+                <div className="h-[18rem] md:h-[22rem] w-full -ml-2">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>

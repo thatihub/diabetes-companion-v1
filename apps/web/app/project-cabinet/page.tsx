@@ -51,9 +51,9 @@ const RECENT_COMMITS = [
 
 export default function ProjectCabinetPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-5xl px-5 py-10 md:px-8 md:py-12">
-        <header className="relative rounded-3xl border border-slate-800 bg-slate-900/70 p-6 md:p-8">
+    <main className="app-page min-h-screen text-slate-100">
+      <div className="py-4 md:py-6">
+        <header className="app-panel relative p-6 md:p-8">
           <Link
             href="/"
             aria-label="Close cabinet"
@@ -65,7 +65,7 @@ export default function ProjectCabinetPage() {
             <div className="space-y-3">
               <Link
                 href="/"
-                className="inline-flex items-center rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
+                className="app-btn"
               >
                 Back Home
               </Link>

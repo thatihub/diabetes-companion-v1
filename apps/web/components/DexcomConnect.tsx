@@ -6,16 +6,21 @@ import { useEffect, useState } from "react";
 export default function DexcomConnect() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<string | null>(null);
+    const isSyncing = status === "syncing";
 
     useEffect(() => {
         const syncParam = searchParams.get("dexcom_sync");
         if (syncParam === "success" || syncParam === "started") {
-            setStatus("syncing");
+            const beginTimer = window.setTimeout(() => setStatus("syncing"), 0);
             // Clear param from URL
             window.history.replaceState({}, "", "/");
 
             // Auto-hide after 5s
-            setTimeout(() => setStatus(null), 5000);
+            const endTimer = window.setTimeout(() => setStatus(null), 5000);
+            return () => {
+                window.clearTimeout(beginTimer);
+                window.clearTimeout(endTimer);
+            };
         }
     }, [searchParams]);
 
@@ -33,26 +38,42 @@ export default function DexcomConnect() {
                     </div>
                     <div>
                         <h4 className="text-slate-100 text-sm font-bold tracking-tight">Dexcom G7</h4>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Live Connection</p>
+                        <div className="mt-1 flex items-center gap-2">
+                            <span
+                                className={`relative inline-flex h-3.5 w-3.5 rounded-full border ${isSyncing
+                                    ? "border-emerald-300/50 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                                    : "border-slate-400/40 bg-slate-500 shadow-[0_0_10px_rgba(100,116,139,0.5)]"
+                                    }`}
+                            >
+                                <span
+                                    className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : "animate-pulse bg-slate-300/20"
+                                        }`}
+                                />
+                                <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
+                            </span>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                Live Connection
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 <button
                     onClick={handleConnect}
-                    disabled={status === "syncing"}
+                    disabled={isSyncing}
                     className={`group relative overflow-hidden px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500
-                        ${status === "syncing"
+                        ${isSyncing
                             ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/30'
-                            : 'bg-teal-500 text-slate-950 hover:bg-teal-400 hover:shadow-[0_0_30px_rgba(20,184,166,0.4)] hover:scale-[1.02] active:scale-95 border border-teal-400/50'
+                            : 'bg-sky-500 text-slate-950 hover:bg-sky-400 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:scale-[1.02] active:scale-95 border border-sky-400/50'
                         }`}
                 >
                     {/* Action-oriented Shimmer Effect */}
-                    {status !== "syncing" && (
+                    {!isSyncing && (
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-[100%] group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none"></div>
                     )}
 
                     <span className="relative z-10 flex items-center gap-3">
-                        {status === "syncing" ? (
+                        {isSyncing ? (
                             <>
                                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" suppressHydrationWarning={true}>
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" suppressHydrationWarning={true}></circle>
@@ -73,14 +94,25 @@ export default function DexcomConnect() {
                 </button>
             </div>
 
-            {status === "syncing" && (
-                <div className="mt-6 flex items-center gap-3 p-4 bg-teal-500/5 border border-teal-500/10 rounded-2xl animate-in fade-in slide-in-from-top-1">
-                    <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
-                    <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest">
-                        Protocol Initiated — Data Stream Updating
-                    </p>
-                </div>
-            )}
+            <div
+                className={`mt-6 flex items-center gap-3 rounded-2xl border p-4 transition-all ${isSyncing
+                    ? "animate-in fade-in slide-in-from-top-1 border-emerald-500/20 bg-emerald-500/5"
+                    : "border-slate-700/40 bg-slate-800/20"
+                    }`}
+            >
+                <span
+                    className={`relative inline-flex h-3.5 w-3.5 rounded-full border ${isSyncing
+                        ? "border-emerald-300/50 bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.9)]"
+                        : "border-slate-400/40 bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.45)]"
+                        }`}
+                >
+                    <span className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : "animate-pulse bg-slate-300/25"}`} />
+                    <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
+                </span>
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : "text-slate-400"}`}>
+                    {isSyncing ? "Protocol Initiated — Data Stream Updating" : "Ready — Sync is on standby"}
+                </p>
+            </div>
         </div>
     );
 }

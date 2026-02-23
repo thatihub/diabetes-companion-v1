@@ -10,6 +10,12 @@ interface InsightCardProps {
     title?: string;
 }
 
+type InsightPayload = {
+    context: "weekly" | "comparison" | "general";
+    startDate?: string | Date;
+    endDate?: string | Date;
+};
+
 export default function InsightCard({
     startDate,
     endDate,
@@ -23,17 +29,17 @@ export default function InsightCard({
         setLoading(true);
         setAnalysis(null);
         try {
-            const payload: any = { context };
+            const payload: InsightPayload = { context };
             if (startDate) payload.startDate = startDate;
             if (endDate) payload.endDate = endDate;
 
             const res = await api.post<{ analysis: string }>("/api/insights/analyze", payload);
             setAnalysis(res.analysis);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Insight Error:", err);
             // Try to extract message
             let msg = "Failed to generate insights.";
-            if (err.message) msg += ` (${err.message})`;
+            if (err instanceof Error && err.message) msg += ` (${err.message})`;
             setAnalysis(msg);
         } finally {
             setLoading(false);
@@ -41,7 +47,7 @@ export default function InsightCard({
     };
 
     return (
-        <div className="w-full max-w-sm bg-gradient-to-br from-indigo-950/40 via-purple-950/40 to-indigo-950/40 border border-indigo-500/20 rounded-[32px] p-6 shadow-2xl relative overflow-hidden group">
+        <div className="w-full bg-gradient-to-br from-indigo-950/40 via-purple-950/40 to-indigo-950/40 border border-indigo-500/20 rounded-[32px] p-6 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full"></div>
 
             <div className="flex items-center justify-between mb-4">
@@ -57,9 +63,9 @@ export default function InsightCard({
                     </p>
                     <button
                         onClick={handleAnalyze}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest py-4 px-6 rounded-2xl w-full transition-all active:scale-95 shadow-lg shadow-indigo-900/40 flex items-center justify-center gap-2"
+                        className="ai-insight-btn"
                     >
-                        Execute Pattern Analysis
+                        Generate AI Insight
                     </button>
                 </div>
             )}

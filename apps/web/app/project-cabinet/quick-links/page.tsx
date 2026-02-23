@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowTopRightOnSquareIcon, ServerIcon, ComputerDesktopIcon, BoltIcon, WrenchIcon, ClipboardDocumentIcon, ClipboardDocumentCheckIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, ServerIcon, ComputerDesktopIcon, WrenchIcon, ClipboardDocumentIcon, ClipboardDocumentCheckIcon } from "@heroicons/react/24/outline";
 
 export default function QuickLinksPage() {
     return (
-        <main className="flex min-h-screen flex-col items-center bg-[#050505] p-4 md:p-8 pt-10 md:pt-16 pb-24 space-y-12">
+        <main className="app-page flex min-h-screen flex-col items-center pb-24 pt-6 space-y-10">
 
             {/* Nav Header */}
-            <div className="w-full max-w-4xl flex items-center justify-between gap-4 px-2">
+            <div className="app-panel w-full flex items-center justify-between gap-4 px-4 py-4">
                 <Link
                     href="/project-cabinet"
-                    className="px-5 py-2.5 bg-zinc-900/80 border border-zinc-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-all shadow-xl backdrop-blur-xl"
+                    className="app-btn"
                 >
                     ← Cabinet Root
                 </Link>
@@ -24,7 +24,7 @@ export default function QuickLinksPage() {
                 </div>
             </div>
 
-            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
                 {/* PRODUCTION NODE */}
                 <section className="space-y-6">

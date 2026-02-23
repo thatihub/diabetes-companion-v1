@@ -4,24 +4,24 @@ import Link from "next/link";
 
 export default function DexcomEmailParams() {
     return (
-        <main className="flex min-h-screen flex-col items-start p-6 space-y-8 max-w-4xl mx-auto">
-            <div className="w-full flex justify-between items-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 mb-4">
+        <main className="app-page flex min-h-screen flex-col items-start space-y-8">
+            <div className="app-panel w-full flex justify-between items-center p-4 mb-2">
                 <div className="flex gap-4 items-center">
-                    <Link href="/project-cabinet" className="text-blue-400 hover:text-blue-300 text-sm">← Back to Cabinet</Link>
+                    <Link href="/project-cabinet" className="app-btn">← Back to Cabinet</Link>
                 </div>
-                <h1 className="text-xl font-bold text-white">Draft: Dexcom Support Email</h1>
+                <h1 className="text-lg md:text-xl font-bold text-white">Draft: Dexcom Support Email</h1>
             </div>
 
-            <div className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg prose prose-invert max-w-none">
+            <div className="app-panel w-full p-6 prose prose-invert max-w-none">
                 <div className="p-4 bg-zinc-800 rounded-md border border-zinc-700 mb-6 font-mono text-sm leading-relaxed whitespace-pre-wrap text-zinc-300">
                     <p><strong className="text-white">To:</strong> developer.support@dexcom.com</p>
-                    <p><strong className="text-white">Subject:</strong> Production V2 API: 'egvs' Endpoint Returning 0 Records despite DataRange Confirmation (Individual Access)</p>
+                    <p><strong className="text-white">Subject:</strong> Production V2 API: &apos;egvs&apos; Endpoint Returning 0 Records despite DataRange Confirmation (Individual Access)</p>
                 </div>
 
                 <div className="text-zinc-300 leading-relaxed space-y-4">
                     <p>Hello Dexcom Developer Support,</p>
 
-                    <p>I am building an "Individual Access" integration for my personal tracking app and encountering a specific issue with the Production V2 API.</p>
+                    <p>I am building an &quot;Individual Access&quot; integration for my personal tracking app and encountering a specific issue with the Production V2 API.</p>
 
                     <h3 className="text-white font-bold text-lg mt-6">The Issue:</h3>
                     <p>Although I can successfully authenticate (OAuth2) and the <code className="bg-zinc-800 p-1 rounded text-pink-400">/dataRange</code> endpoint confirms that my account has recent data (up to today), requests to the <code className="bg-zinc-800 p-1 rounded text-pink-400">/egvs</code> endpoint specifically return an empty list (<code className="bg-zinc-800 p-1 rounded text-pink-400">[]</code>) with a <code className="bg-zinc-800 p-1 rounded text-pink-400">200 OK</code> status.</p>
@@ -58,7 +58,7 @@ export default function DexcomEmailParams() {
                     <h3 className="text-white font-bold text-lg mt-6">Troubleshooting Steps Taken:</h3>
                     <ul className="list-disc pl-5 space-y-1">
                         <li>Verified access token is valid and has <code>egv</code> scope.</li>
-                        <li>Tried multiple time windows: "Display Time" local windows, "System Time" UTC windows, and narrow windows around the last known calibration time.</li>
+                        <li>Tried multiple time windows: &quot;Display Time&quot; local windows, &quot;System Time&quot; UTC windows, and narrow windows around the last known calibration time.</li>
                         <li>All requests return <code>200 OK</code> but <code>0</code> records.</li>
                     </ul>
 

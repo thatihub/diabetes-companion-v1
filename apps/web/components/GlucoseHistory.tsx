@@ -51,7 +51,7 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
 
     if (loading && readings.length === 0) {
         return (
-            <div className="px-6 space-y-4">
+            <div className="space-y-4">
                 {[1, 2, 3].map(i => (
                     <div key={i} className="h-20 w-full bg-slate-800/20 animate-pulse rounded-[24px]"></div>
                 ))}
@@ -59,11 +59,11 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
         );
     }
 
-    if (error) return <div className="px-6 py-4 text-rose-400 text-xs font-bold uppercase tracking-widest">{error}</div>;
-    if (readings.length === 0) return <div className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-widest">No logs yet.</div>;
+    if (error) return <div className="py-4 text-rose-400 text-xs font-bold uppercase tracking-widest">{error}</div>;
+    if (readings.length === 0) return <div className="py-4 text-slate-500 text-xs font-bold uppercase tracking-widest">No logs yet.</div>;
 
     return (
-        <div className="px-6 space-y-6">
+        <div className="space-y-6">
             <div className="flex items-center justify-between px-2">
                 <div>
                     <h3 className="text-slate-100 text-lg font-bold tracking-tight">Timeline</h3>
