@@ -150,3 +150,67 @@ insightsRouter.post("/analyze", async (req, res) => {
         res.status(200).json({ analysis: `• ⚠️ AI Error: ${err.message}` });
     }
 });
+
+/**
+ * POST /api/insights/tts
+ * Body: { text: string, voice?: string }
+ * Returns: audio/mpeg stream
+ */
+insightsRouter.post("/tts", async (req, res) => {
+    const { text, voice = "nova" } = req.body || {};
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+        return res.status(400).json({ error: "Text is required." });
+    }
+
+    if (!OPENAI_API_KEY || OPENAI_API_KEY.length < 10) {
+        return res.status(500).json({ error: "Missing OPENAI_API_KEY." });
+    }
+
+    const cleanedText = text.trim().slice(0, 4000);
+    const chosenVoice = String(voice).toLowerCase();
+
+    const tryModels = ["gpt-4o-mini-tts", "tts-1"];
+
+    try {
+        let audioData = null;
+
+        for (const model of tryModels) {
+            try {
+                const response = await axios.post(
+                    "https://api.openai.com/v1/audio/speech",
+                    {
+                        model,
+                        voice: chosenVoice,
+                        input: cleanedText,
+                        response_format: "mp3"
+                    },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+                            "Accept": "audio/mpeg"
+                        },
+                        responseType: "arraybuffer",
+                        timeout: 60000
+                    }
+                );
+                audioData = response.data;
+                break;
+            } catch (innerErr) {
+                console.warn(`[AI TTS] Model ${model} failed:`, innerErr?.response?.status || innerErr?.message);
+            }
+        }
+
+        if (!audioData) {
+            throw new Error("OpenAI TTS failed for all models.");
+        }
+
+        res.setHeader("Content-Type", "audio/mpeg");
+        res.setHeader("Cache-Control", "no-store");
+        return res.send(Buffer.from(audioData));
+    } catch (err) {
+        console.error("[AI TTS] Error:", err.message);
+        return res.status(502).json({ error: `TTS failed: ${err.message}` });
+    }
+});
