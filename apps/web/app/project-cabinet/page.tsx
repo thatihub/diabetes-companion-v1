@@ -36,19 +36,19 @@ const INTERNAL_LINKS = [
 
 const RECENT_COMMITS = [
   {
-    hash: "1b32b4b",
+    hash: "bd1bfcd",
     date: "2026-02-22",
-    message: "Fix Render runtime by enforcing Node 20 and explicit host/port binding.",
+    message: "Force dynamic rendering for cabinet to avoid stale pre-render cache.",
   },
   {
-    hash: "c85a9c7",
+    hash: "70b3dc3",
     date: "2026-02-22",
-    message: "Fix web service build/start commands for apps/web rootDir deploys.",
+    message: "Unify design system, iPad layout, and interactive insight UX across the app.",
   },
   {
-    hash: "7b2fa01",
+    hash: "d7a92e3",
     date: "2026-02-22",
-    message: "Check in local UI/API updates on main.",
+    message: "Simplify cabinet layout, align status panel, and add close button.",
   },
 ];
 
@@ -86,11 +86,11 @@ export default function ProjectCabinetPage() {
                 <dd className="font-medium text-emerald-300">Active</dd>
 
                 <dt className="text-slate-400">Release</dt>
-                <dd className="font-medium text-sky-300">1.2.8</dd>
+                <dd className="font-medium text-sky-300">1.3.0</dd>
 
                 <dt className="text-slate-400">Latest sync</dt>
                 <dd className="font-medium text-slate-200">
-                  2026-02-22 · <code className="font-mono text-slate-100">1b32b4b</code>
+                  2026-02-22 · <code className="font-mono text-slate-100">bd1bfcd</code>
                 </dd>
               </dl>
             </div>
