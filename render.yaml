@@ -37,8 +37,8 @@ services:
     rootDir: apps/web
     
     # Build the Next.js app
-    buildCommand: npm install && npm run build:web
-    startCommand: npm --workspace apps/web run start
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
 
     # Environment variables
     envVars:
