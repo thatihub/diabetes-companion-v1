@@ -66,7 +66,22 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
         let hours = req.query.hours ? Number(req.query.hours) : null;
         if (hours !== null && (isNaN(hours) || hours <= 0)) hours = null; // Ensure valid positive number
 
-        let queryText = `SELECT * FROM glucose_readings`;
+        let queryText = `SELECT *,
+            CASE
+                WHEN source = 'dexcom_api'
+                  AND COALESCE(notes, '') LIKE 'Dexcom API%'
+                  AND COALESCE(carbs_grams, 0) = 0
+                THEN NULL
+                ELSE carbs_grams
+            END AS carbs_grams,
+            CASE
+                WHEN source = 'dexcom_api'
+                  AND COALESCE(notes, '') LIKE 'Dexcom API%'
+                  AND COALESCE(insulin_units, 0) = 0
+                THEN NULL
+                ELSE insulin_units
+            END AS insulin_units
+            FROM glucose_readings`;
         const params = [];
         const conditions = [];
 
