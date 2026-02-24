@@ -93,11 +93,17 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
         console.log(`[DB QUERY] ${queryText} (Params: ${params})`);
 
         const result = await query(queryText, params);
-        let rows = result.rows.map((r) => ({
-            ...r,
-            carbs_grams: r.carbs_grams === null || r.carbs_grams === undefined ? null : Number(r.carbs_grams),
-            insulin_units: r.insulin_units === null || r.insulin_units === undefined ? null : Number(r.insulin_units),
-        }));
+        let rows = result.rows.map((r) => {
+            const carbs = r.carbs_grams === null || r.carbs_grams === undefined ? null : Number(r.carbs_grams);
+            const insulin = r.insulin_units === null || r.insulin_units === undefined ? null : Number(r.insulin_units);
+            const isDexcomGlucoseRow = r.source === "dexcom_api" && typeof r.notes === "string" && r.notes.startsWith("Dexcom API");
+
+            return {
+                ...r,
+                carbs_grams: isDexcomGlucoseRow && carbs === 0 ? null : carbs,
+                insulin_units: isDexcomGlucoseRow && insulin === 0 ? null : insulin,
+            };
+        });
 
         // --- NEW: Intelligently sample data for large payloads to prevent timeouts ---
         // If we have more than 2000 points, we sample based on the range density
