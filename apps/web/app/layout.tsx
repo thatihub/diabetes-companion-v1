@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Using Inter for a clean, modern look
 import Link from "next/link";
+import DataModeToggle from "../components/DataModeToggle";
 import "./globals.css";
 // Build Timestamp: 2026-02-11T11:29:00Z
 
@@ -29,9 +30,12 @@ export default function RootLayout({
               <Link href="/" className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-300 hover:text-white">
                 GlycoFlow V2
               </Link>
-              <Link href="/project-cabinet" className="app-btn">
-                Cabinet
-              </Link>
+              <div className="flex items-center gap-2">
+                <DataModeToggle />
+                <Link href="/project-cabinet" className="app-btn">
+                  Cabinet
+                </Link>
+              </div>
             </div>
           </div>
           <main className="pb-16">

@@ -15,12 +15,18 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
         setSuccess(false);
 
         const formData = new FormData(e.currentTarget);
+        const parseOptionalNumber = (value: FormDataEntryValue | null) => {
+            const raw = typeof value === "string" ? value.trim() : "";
+            if (!raw) return null;
+            const num = Number(raw);
+            return Number.isFinite(num) ? num : null;
+        };
         const data = {
             glucose_mgdl: Number(formData.get("glucose")),
             meal_tag: formData.get("meal_tag"),
             notes: formData.get("notes"),
-            carbs_grams: Number(formData.get("carbs")) || 0,
-            insulin_units: Number(formData.get("insulin")) || 0,
+            carbs_grams: parseOptionalNumber(formData.get("carbs")),
+            insulin_units: parseOptionalNumber(formData.get("insulin")),
         };
 
         try {
@@ -31,10 +37,10 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
 
             // Auto-hide success message after 3s
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
             // Show actual error message if available, otherwise generic
-            const message = err?.message || "Unknown error occurred";
+            const message = err instanceof Error ? err.message : "Unknown error occurred";
             setError(`Error: ${message}`);
         } finally {
             setLoading(false);

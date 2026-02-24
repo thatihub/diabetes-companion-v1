@@ -3,6 +3,11 @@ import axios from "axios";
 import { query } from "../db.js";
 
 export const insightsRouter = Router();
+const DEMO_SOURCES = ["mock_seed", "mock_events", "demo_manual"];
+
+function isDemoMode(req) {
+    return String(req.headers["x-data-mode"] || "").toLowerCase() === "demo";
+}
 
 // Retrieve Key
 const rawKey = process.env.OPENAI_API_KEY || "";
@@ -63,6 +68,7 @@ insightsRouter.post("/analyze-week", async (req, res) => {
 insightsRouter.post("/analyze", async (req, res) => {
     const range = req.body.range || "48h";
     console.log(`[AI] analyze requested for range: ${range} - context: ${req.body.context || 'none'}`);
+    const demoMode = isDemoMode(req);
 
     try {
         let promptData = "";
@@ -70,11 +76,19 @@ insightsRouter.post("/analyze", async (req, res) => {
 
         if (range === "48h" || range === "24h") {
             // DETAILED MODE (Raw Logs)
-            const result = await query(
-                `select * from glucose_readings 
-                 where measured_at > now() - interval '48 hours'
-                 order by measured_at desc limit 200`
-            );
+            const result = demoMode
+                ? await query(
+                    `select * from glucose_readings 
+                     where measured_at > now() - interval '48 hours'
+                       and source = ANY($1::text[])
+                     order by measured_at desc limit 200`,
+                    [DEMO_SOURCES]
+                )
+                : await query(
+                    `select * from glucose_readings 
+                     where measured_at > now() - interval '48 hours'
+                     order by measured_at desc limit 200`
+                );
             const readings = result.rows;
             if (readings.length < 3) return res.json({ analysis: "Insufficient data." });
 
@@ -88,21 +102,38 @@ insightsRouter.post("/analyze", async (req, res) => {
             // TREND MODE (Weekly Aggregation)
             const days = range === "90d" ? 90 : range === "30d" ? 30 : range === "14d" ? 14 : 7;
 
-            const result = await query(`
-                SELECT 
-                    date_trunc('week', measured_at) as week_start,
-                    COUNT(*) as count,
-                    ROUND(AVG(glucose_mgdl)) as avg_glucose,
-                    ROUND(STDDEV(glucose_mgdl)) as variability,
-                    SUM(COALESCE(carbs_grams, 0)) as total_carbs,
-                    SUM(COALESCE(insulin_units, 0)) as total_insulin,
-                    MIN(glucose_mgdl) as min_val,
-                    MAX(glucose_mgdl) as max_val
-                FROM glucose_readings
-                WHERE measured_at > now() - interval '${days} days'
-                GROUP BY 1
-                ORDER BY 1 DESC
-            `);
+            const result = demoMode
+                ? await query(`
+                    SELECT 
+                        date_trunc('week', measured_at) as week_start,
+                        COUNT(*) as count,
+                        ROUND(AVG(glucose_mgdl)) as avg_glucose,
+                        ROUND(STDDEV(glucose_mgdl)) as variability,
+                        SUM(COALESCE(carbs_grams, 0)) as total_carbs,
+                        SUM(COALESCE(insulin_units, 0)) as total_insulin,
+                        MIN(glucose_mgdl) as min_val,
+                        MAX(glucose_mgdl) as max_val
+                    FROM glucose_readings
+                    WHERE measured_at > now() - interval '${days} days'
+                      AND source = ANY($1::text[])
+                    GROUP BY 1
+                    ORDER BY 1 DESC
+                `, [DEMO_SOURCES])
+                : await query(`
+                    SELECT 
+                        date_trunc('week', measured_at) as week_start,
+                        COUNT(*) as count,
+                        ROUND(AVG(glucose_mgdl)) as avg_glucose,
+                        ROUND(STDDEV(glucose_mgdl)) as variability,
+                        SUM(COALESCE(carbs_grams, 0)) as total_carbs,
+                        SUM(COALESCE(insulin_units, 0)) as total_insulin,
+                        MIN(glucose_mgdl) as min_val,
+                        MAX(glucose_mgdl) as max_val
+                    FROM glucose_readings
+                    WHERE measured_at > now() - interval '${days} days'
+                    GROUP BY 1
+                    ORDER BY 1 DESC
+                `);
 
             const weeks = result.rows;
             if (weeks.length === 0) return res.json({ analysis: "Insufficient data for trend analysis." });

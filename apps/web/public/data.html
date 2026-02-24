@@ -137,9 +137,8 @@
     <script>
         async function load() {
             try {
-                // Fetch from dynamic API (works on localhost & production)
-                const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://diabetes-companion-api-14nu.onrender.com';
-                const res = await fetch(`${API_BASE}/api/glucose?hours=2160&limit=50000`);
+                // Use same-origin API path; Next.js rewrite forwards to backend
+                const res = await fetch(`/api/glucose?hours=2160&limit=50000`);
                 const data = await res.json();
 
                 document.getElementById('loading').style.display = 'none';
@@ -149,19 +148,19 @@
                 tbody.innerHTML = data.map(row => {
                     const date = new Date(row.measured_at);
                     const timeStr = date.toLocaleString();
-                    const note = row.notes || row.source || '-';
+                    const note = row.notes ?? row.source ?? '-';
                     let tagClass = 'tag';
                     if (note.includes('Voice')) tagClass += ' voice';
                     if (note.includes('Health')) tagClass += ' health';
                     if (note.includes('Event')) tagClass += ' dexcom';
 
-                    const insulin = row.insulin_units || '-';
-                    const carbs = row.carbs_grams || '-';
+                    const insulin = row.insulin_units ?? '-';
+                    const carbs = row.carbs_grams ?? '-';
 
                     return `
                         <tr>
                             <td class="time">${timeStr}</td>
-                            <td class="glucose" style="color:${getColor(row.glucose_mgdl)}">${row.glucose_mgdl || '-'}</td>
+                            <td class="glucose" style="color:${getColor(row.glucose_mgdl)}">${row.glucose_mgdl ?? '-'}</td>
                             <td style="color:#fb7185; font-weight:bold">${insulin}</td>
                             <td style="color:#34d399; font-weight:bold">${carbs}</td>
                             <td>${note !== '-' ? `<span class="${tagClass}">${note}</span>` : '-'}</td>

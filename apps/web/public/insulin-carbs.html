@@ -133,9 +133,8 @@
     <script>
         async function load() {
             try {
-                // Dynamic API Base
-                const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://diabetes-companion-api-14nu.onrender.com';
-                const res = await fetch(`${API_BASE}/api/glucose?hours=2160&limit=50000`);
+                // Use same-origin API path; Next.js rewrite forwards to backend
+                const res = await fetch(`/api/glucose?hours=2160&limit=50000`);
                 const allData = await res.json();
 
                 // Filter for ONLY rows with Insulin OR Carbs

@@ -1,12 +1,35 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+const DATA_MODE_KEY = "data_mode";
+const MODE_EVENT = "data-mode-change";
+
+function readDataMode(): "real" | "demo" {
+    if (typeof window === "undefined") return "real";
+    const stored = window.localStorage.getItem(DATA_MODE_KEY);
+    return stored === "demo" ? "demo" : "real";
+}
+
+function subscribeDataMode(onStoreChange: () => void): () => void {
+    if (typeof window === "undefined") return () => {};
+    const handler = () => onStoreChange();
+    window.addEventListener("storage", handler);
+    window.addEventListener(MODE_EVENT, handler);
+    return () => {
+        window.removeEventListener("storage", handler);
+        window.removeEventListener(MODE_EVENT, handler);
+    };
+}
 
 export default function DexcomConnect() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<string | null>(null);
+    const mode = useSyncExternalStore(subscribeDataMode, readDataMode, () => "real");
+    const isDemoMode = mode === "demo";
     const isSyncing = status === "syncing";
+    const isConnectDisabled = isSyncing || isDemoMode;
 
     useEffect(() => {
         const syncParam = searchParams.get("dexcom_sync");
@@ -25,6 +48,7 @@ export default function DexcomConnect() {
     }, [searchParams]);
 
     const handleConnect = () => {
+        if (isDemoMode) return;
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
         window.location.href = `${apiUrl}/api/dexcom/login`;
     };
@@ -42,17 +66,23 @@ export default function DexcomConnect() {
                             <span
                                 className={`relative inline-flex h-3.5 w-3.5 rounded-full border ${isSyncing
                                     ? "border-emerald-300/50 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                                    : isDemoMode
+                                        ? "border-amber-300/50 bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.6)]"
                                     : "border-slate-400/40 bg-slate-500 shadow-[0_0_10px_rgba(100,116,139,0.5)]"
                                     }`}
                             >
                                 <span
-                                    className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : "animate-pulse bg-slate-300/20"
+                                    className={`absolute inset-0 rounded-full ${isSyncing
+                                        ? "animate-ping bg-emerald-300/60"
+                                        : isDemoMode
+                                            ? "bg-amber-200/30"
+                                            : "animate-pulse bg-slate-300/20"
                                         }`}
                                 />
                                 <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
                             </span>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                                Live Connection
+                            <p className={`text-[10px] font-bold uppercase tracking-widest ${isDemoMode ? "text-amber-300" : "text-slate-500"}`}>
+                                {isDemoMode ? "Demo Connection" : "Live Connection"}
                             </p>
                         </div>
                     </div>
@@ -60,15 +90,15 @@ export default function DexcomConnect() {
 
                 <button
                     onClick={handleConnect}
-                    disabled={isSyncing}
+                    disabled={isConnectDisabled}
                     className={`group relative overflow-hidden whitespace-nowrap min-w-[112px] px-5 sm:px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-500
-                        ${isSyncing
+                        ${isConnectDisabled
                             ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/30'
                             : 'bg-sky-500 text-slate-950 hover:bg-sky-400 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:scale-[1.02] active:scale-95 border border-sky-400/50'
                         }`}
                 >
                     {/* Action-oriented Shimmer Effect */}
-                    {!isSyncing && (
+                    {!isConnectDisabled && (
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-[100%] group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none"></div>
                     )}
 
@@ -81,6 +111,8 @@ export default function DexcomConnect() {
                                 </svg>
                                 AUTH
                             </>
+                        ) : isDemoMode ? (
+                            <span className="w-full text-center">DEMO</span>
                         ) : (
                             <span className="w-full text-center">SYNC</span>
                         )}
@@ -97,14 +129,16 @@ export default function DexcomConnect() {
                 <span
                     className={`relative inline-flex h-3.5 w-3.5 rounded-full border ${isSyncing
                         ? "border-emerald-300/50 bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.9)]"
+                        : isDemoMode
+                            ? "border-amber-300/50 bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.6)]"
                         : "border-slate-400/40 bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.45)]"
                         }`}
                 >
-                    <span className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : "animate-pulse bg-slate-300/25"}`} />
+                    <span className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : isDemoMode ? "bg-amber-200/35" : "animate-pulse bg-slate-300/25"}`} />
                     <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
                 </span>
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : "text-slate-400"}`}>
-                    {isSyncing ? "Protocol Initiated — Data Stream Updating" : "Ready — Sync is on standby"}
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : isDemoMode ? "text-amber-300" : "text-slate-400"}`}>
+                    {isSyncing ? "Protocol Initiated — Data Stream Updating" : isDemoMode ? "Demo mode — Live sync is disabled" : "Ready — Sync is on standby"}
                 </p>
             </div>
         </div>

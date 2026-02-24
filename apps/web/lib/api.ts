@@ -1,16 +1,19 @@
-// Use relative URLs to leverage Next.js API proxy (configured in next.config.ts)
-// This avoids CORS issues and uses the server-side API_URL environment variable
-const API_BASE_URL = '';
+const DATA_MODE_KEY = 'data_mode';
+const DEMO_API_BASE_URL = process.env.NEXT_PUBLIC_DEMO_API_BASE_URL || '';
+const REAL_API_BASE_URL = process.env.NEXT_PUBLIC_REAL_API_BASE_URL || '';
 
 type ApiOptions = RequestInit & {
-    data?: any;
+    data?: unknown;
 };
 
 async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOptions = {}): Promise<T> {
+    const selectedMode = getSelectedMode();
+    const apiBase = getApiBaseForMode(selectedMode);
     const config: RequestInit = {
         ...customConfig,
         headers: {
             'Content-Type': 'application/json',
+            'x-data-mode': selectedMode,
             ...customConfig.headers,
         },
     };
@@ -22,7 +25,7 @@ async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOption
     // Ensure endpoint starts with a slash if not provided
     const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-    const response = await fetch(`${path}`, config);
+    const response = await fetch(`${apiBase}${path}`, config);
 
     if (!response.ok) {
         // Special case for 429 (Rate Limit / WAF)
@@ -92,14 +95,35 @@ async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOption
     return response.json();
 }
 
+function getSelectedMode(): 'real' | 'demo' {
+    if (typeof window === 'undefined') {
+        return 'real';
+    }
+
+    const selectedMode = window.localStorage.getItem(DATA_MODE_KEY);
+    return selectedMode === 'demo' ? 'demo' : 'real';
+}
+
+function getApiBaseForMode(mode: 'real' | 'demo'): string {
+    if (mode === 'demo' && DEMO_API_BASE_URL) {
+        return DEMO_API_BASE_URL.replace(/\/+$/, '');
+    }
+
+    if (REAL_API_BASE_URL) {
+        return REAL_API_BASE_URL.replace(/\/+$/, '');
+    }
+
+    return '';
+}
+
 export const api = {
     get: <T>(endpoint: string, options?: ApiOptions) =>
         fetcher<T>(endpoint, { method: 'GET', ...options }),
 
-    post: <T>(endpoint: string, data: any, options?: ApiOptions) =>
+    post: <T>(endpoint: string, data: unknown, options?: ApiOptions) =>
         fetcher<T>(endpoint, { method: 'POST', data, ...options }),
 
-    put: <T>(endpoint: string, data: any, options?: ApiOptions) =>
+    put: <T>(endpoint: string, data: unknown, options?: ApiOptions) =>
         fetcher<T>(endpoint, { method: 'PUT', data, ...options }),
 
     delete: <T>(endpoint: string, options?: ApiOptions) =>

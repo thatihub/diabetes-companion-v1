@@ -3,6 +3,11 @@ import { query } from "../db.js";
 import { requireFields, validateGlucose } from "../middleware/validate.js";
 
 export const glucoseRouter = Router();
+const DEMO_SOURCES = ["mock_seed", "mock_events", "demo_manual"];
+
+function isDemoMode(req) {
+    return String(req.headers["x-data-mode"] || "").toLowerCase() === "demo";
+}
 
 /**
  * GET /api/ping
@@ -18,15 +23,27 @@ glucoseRouter.post(
     // validateGlucose,
     async (req, res, next) => {
         try {
+            const demoMode = isDemoMode(req);
             const { glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units } = req.body;
 
-            const result = await query(
-                `insert into glucose_readings (glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units)
-         values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6)
-         ON CONFLICT (measured_at) DO NOTHING
-         returning *`,
-                [glucose_mgdl ?? null, measured_at ?? null, notes ?? null, meal_tag ?? null, carbs_grams ?? null, insulin_units ?? null]
-            );
+            const queryText = demoMode
+                ? `insert into glucose_readings (glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units, source)
+                   values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6, 'demo_manual')
+                   ON CONFLICT (measured_at) DO NOTHING
+                   returning *`
+                : `insert into glucose_readings (glucose_mgdl, measured_at, notes, meal_tag, carbs_grams, insulin_units)
+                   values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6)
+                   ON CONFLICT (measured_at) DO NOTHING
+                   returning *`;
+
+            const result = await query(queryText, [
+                glucose_mgdl ?? null,
+                measured_at ?? null,
+                notes ?? null,
+                meal_tag ?? null,
+                carbs_grams ?? null,
+                insulin_units ?? null,
+            ]);
 
             res.status(201).json(result.rows[0]);
         } catch (err) {
@@ -40,6 +57,7 @@ glucoseRouter.post(
  */
 glucoseRouter.get("/glucose", async (req, res, next) => {
     try {
+        const demoMode = isDemoMode(req);
         let limit = req.query.limit ? Number(req.query.limit) : 1000;
         if (isNaN(limit) || limit < 1) limit = 1000;
         // Cap limit to prevent massive fetches causing timeouts
@@ -54,6 +72,11 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
 
         if (hours) {
             conditions.push(`measured_at > now() - interval '${hours} hours'`);
+        }
+
+        if (demoMode) {
+            params.push(DEMO_SOURCES);
+            conditions.push(`source = ANY($${params.length}::text[])`);
         }
 
         if (conditions.length > 0) {
