@@ -101,10 +101,10 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" suppressHydrationWarning={true}>
                                         {isMounted ? new Date(reading.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                     </span>
-                                    {reading.insulin_units && (
+                                    {reading.insulin_units !== null && reading.insulin_units !== undefined && (
                                         <span className="px-2 py-0.5 bg-rose-500/10 text-rose-400 text-[8px] font-black uppercase rounded-full">💉 {reading.insulin_units}u</span>
                                     )}
-                                    {reading.carbs_grams && (
+                                    {reading.carbs_grams !== null && reading.carbs_grams !== undefined && (
                                         <span className="px-2 py-0.5 bg-teal-500/10 text-teal-400 text-[8px] font-black uppercase rounded-full">🍴 {reading.carbs_grams}g</span>
                                     )}
                                 </div>

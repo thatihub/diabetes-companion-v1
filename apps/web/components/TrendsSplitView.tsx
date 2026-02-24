@@ -184,8 +184,8 @@ export default function TrendsSplitView() {
                             .filter((_, idx) => idx % sampleRate === 0)
                             .map((p) => ({
                                 ...p,
-                                insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
-                                carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
+                                insulin_units: p.insulin_units !== null && p.insulin_units !== undefined ? Number(p.insulin_units) : undefined,
+                                carbs_grams: p.carbs_grams !== null && p.carbs_grams !== undefined ? Number(p.carbs_grams) : undefined,
                                 time: new Date(p.measured_at).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                                 timestamp: new Date(p.measured_at).getTime()
                             }));

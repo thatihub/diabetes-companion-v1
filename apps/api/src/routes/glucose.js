@@ -25,7 +25,7 @@ glucoseRouter.post(
          values ($1, coalesce($2::timestamptz, now()), $3, $4, $5, $6)
          ON CONFLICT (measured_at) DO NOTHING
          returning *`,
-                [glucose_mgdl, measured_at || null, notes || null, meal_tag || null, carbs_grams || null, insulin_units || null]
+                [glucose_mgdl ?? null, measured_at ?? null, notes ?? null, meal_tag ?? null, carbs_grams ?? null, insulin_units ?? null]
             );
 
             res.status(201).json(result.rows[0]);
@@ -70,7 +70,11 @@ glucoseRouter.get("/glucose", async (req, res, next) => {
         console.log(`[DB QUERY] ${queryText} (Params: ${params})`);
 
         const result = await query(queryText, params);
-        let rows = result.rows;
+        let rows = result.rows.map((r) => ({
+            ...r,
+            carbs_grams: r.carbs_grams === null || r.carbs_grams === undefined ? null : Number(r.carbs_grams),
+            insulin_units: r.insulin_units === null || r.insulin_units === undefined ? null : Number(r.insulin_units),
+        }));
 
         // --- NEW: Intelligently sample data for large payloads to prevent timeouts ---
         // If we have more than 2000 points, we sample based on the range density
@@ -119,7 +123,7 @@ glucoseRouter.put("/glucose/:id", validateGlucose, async (req, res, next) => {
        set glucose_mgdl = $1, notes = $2, meal_tag = $3, carbs_grams = $4, insulin_units = $5, updated_at = now()
        where id = $6 
        returning *`,
-            [glucose_mgdl, notes || null, meal_tag || null, carbs_grams || null, insulin_units || null, id]
+            [glucose_mgdl ?? null, notes ?? null, meal_tag ?? null, carbs_grams ?? null, insulin_units ?? null, id]
         );
 
         if (result.rowCount === 0) return res.status(404).json({ error: "Not found" });

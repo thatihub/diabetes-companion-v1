@@ -49,8 +49,8 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                     .reverse()
                     .map(p => ({
                         ...p,
-                        insulin_units: p.insulin_units ? Number(p.insulin_units) : undefined,
-                        carbs_grams: p.carbs_grams ? Number(p.carbs_grams) : undefined,
+                        insulin_units: p.insulin_units !== null && p.insulin_units !== undefined ? Number(p.insulin_units) : undefined,
+                        carbs_grams: p.carbs_grams !== null && p.carbs_grams !== undefined ? Number(p.carbs_grams) : undefined,
                         time: range === "24h"
                             ? new Date(p.measured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : new Date(p.measured_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
