@@ -130,6 +130,24 @@ dexcomRouter.get("/status", async (req, res) => {
     }
 });
 
+// 3b. GET /api/dexcom/events (diagnostics for carbs/insulin ingestion)
+dexcomRouter.get("/events", async (req, res) => {
+    try {
+        const rows = await query(
+            `SELECT id, measured_at, carbs_grams, insulin_units, notes
+             FROM glucose_readings
+             WHERE source = 'dexcom_api'
+               AND (carbs_grams IS NOT NULL OR insulin_units IS NOT NULL)
+             ORDER BY measured_at DESC
+             LIMIT 50`
+        );
+        res.json(rows.rows || rows);
+    } catch (err) {
+        logDexcom("EVENTS_ENDPOINT_ERROR", { error: err.message });
+        res.status(500).json({ error: "Failed to fetch events" });
+    }
+});
+
 /**
  * 4. GET /api/dexcom/sync
  */
