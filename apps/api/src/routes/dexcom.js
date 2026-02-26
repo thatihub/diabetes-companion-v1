@@ -19,7 +19,14 @@ function classifyDexcomEvent(ev) {
     const typeRaw = String(ev.eventType || ev.recordType || "").toLowerCase();
     const subTypeRaw = String(ev.eventSubType || "").toLowerCase();
     const unitRaw = String(ev.unit || "").toLowerCase();
-    let isCarb = typeRaw.includes("carb") || typeRaw.includes("meal") || typeRaw.includes("food");
+    const val = Number(ev.value ?? ev.amount ?? ev.quantity);
+    const value = Number.isFinite(val) ? val : null;
+
+    let isCarb =
+        typeRaw.includes("carb") ||
+        typeRaw.includes("meal") ||
+        typeRaw.includes("food") ||
+        (value && value > 0 && (unitRaw === "grams" || unitRaw === "g"));
     let isInsulin = typeRaw.includes("insulin");
 
     if (!isCarb && (unitRaw === "grams" || unitRaw === "g")) isCarb = true;
@@ -28,9 +35,6 @@ function classifyDexcomEvent(ev) {
     // Accept Dexcom dose subtypes like "fastActing" as insulin
     if (!isInsulin && subTypeRaw.includes("fastacting")) isInsulin = true;
     if (!isInsulin && subTypeRaw.includes("longacting")) isInsulin = true;
-
-    const val = Number(ev.value ?? ev.amount ?? ev.quantity);
-    const value = Number.isFinite(val) ? val : null;
 
     return { isCarb, isInsulin, value };
 }
