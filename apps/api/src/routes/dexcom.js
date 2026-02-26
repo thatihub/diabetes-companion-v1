@@ -24,8 +24,11 @@ function classifyDexcomEvent(ev) {
 
     let isCarb =
         typeRaw.includes("carb") ||
+        subTypeRaw.includes("carb") ||
         typeRaw.includes("meal") ||
+        subTypeRaw.includes("meal") ||
         typeRaw.includes("food") ||
+        subTypeRaw.includes("food") ||
         (value && value > 0 && (unitRaw === "grams" || unitRaw === "g"));
     let isInsulin = typeRaw.includes("insulin");
 
