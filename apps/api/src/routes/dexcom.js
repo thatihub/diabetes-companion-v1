@@ -19,7 +19,7 @@ function classifyDexcomEvent(ev) {
     const typeRaw = String(ev.eventType || ev.recordType || "").toLowerCase();
     const subTypeRaw = String(ev.eventSubType || "").toLowerCase();
     const unitRaw = String(ev.unit || "").toLowerCase();
-    let isCarb = typeRaw.includes("carb");
+    let isCarb = typeRaw.includes("carb") || typeRaw.includes("meal") || typeRaw.includes("food");
     let isInsulin = typeRaw.includes("insulin");
 
     if (!isCarb && (unitRaw === "grams" || unitRaw === "g")) isCarb = true;
@@ -476,7 +476,7 @@ async function syncData(accessToken) {
 
                             if (isCarb) {
                                 entry.carbs += value;
-                                entry.notes.push(`Carbs: ${value}g`);
+                                entry.notes.push(`Carbs: ${value}g (type:${ev.eventType || ev.recordType || 'n/a'} sub:${ev.eventSubType || 'n/a'} unit:${ev.unit || 'n/a'})`);
                             }
                             if (isInsulin) {
                                 entry.insulin += value;
