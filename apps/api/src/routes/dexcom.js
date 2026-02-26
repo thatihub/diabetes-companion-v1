@@ -17,6 +17,7 @@ function normalizeDexcomTime(ts) {
 
 function classifyDexcomEvent(ev) {
     const typeRaw = String(ev.eventType || ev.recordType || "").toLowerCase();
+    const subTypeRaw = String(ev.eventSubType || "").toLowerCase();
     const unitRaw = String(ev.unit || "").toLowerCase();
     let isCarb = typeRaw.includes("carb");
     let isInsulin = typeRaw.includes("insulin");
@@ -25,8 +26,8 @@ function classifyDexcomEvent(ev) {
     if (!isInsulin && (unitRaw === "units" || unitRaw === "u" || unitRaw === "iu")) isInsulin = true;
 
     // Accept Dexcom dose subtypes like "fastActing" as insulin
-    if (!isInsulin && typeRaw.includes("fastacting")) isInsulin = true;
-    if (!isInsulin && typeRaw.includes("longacting")) isInsulin = true;
+    if (!isInsulin && subTypeRaw.includes("fastacting")) isInsulin = true;
+    if (!isInsulin && subTypeRaw.includes("longacting")) isInsulin = true;
 
     const val = Number(ev.value ?? ev.amount ?? ev.quantity);
     const value = Number.isFinite(val) ? val : null;
@@ -475,7 +476,7 @@ async function syncData(accessToken) {
 
                             if (isCarb) {
                                 entry.carbs += value;
-                                entry.notes.push(`Carbs: ${val}g`);
+                                entry.notes.push(`Carbs: ${value}g`);
                             }
                             if (isInsulin) {
                                 entry.insulin += value;
