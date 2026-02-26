@@ -15,6 +15,25 @@ function normalizeDexcomTime(ts) {
     return /([zZ]|[+\-]\d{2}:\d{2})$/.test(ts) ? ts : `${ts}Z`;
 }
 
+function classifyDexcomEvent(ev) {
+    const typeRaw = String(ev.eventType || ev.recordType || "").toLowerCase();
+    const unitRaw = String(ev.unit || "").toLowerCase();
+    let isCarb = typeRaw.includes("carb");
+    let isInsulin = typeRaw.includes("insulin");
+
+    if (!isCarb && (unitRaw === "grams" || unitRaw === "g")) isCarb = true;
+    if (!isInsulin && (unitRaw === "units" || unitRaw === "u" || unitRaw === "iu")) isInsulin = true;
+
+    // Accept Dexcom dose subtypes like "fastActing" as insulin
+    if (!isInsulin && typeRaw.includes("fastacting")) isInsulin = true;
+    if (!isInsulin && typeRaw.includes("longacting")) isInsulin = true;
+
+    const val = Number(ev.value ?? ev.amount ?? ev.quantity);
+    const value = Number.isFinite(val) ? val : null;
+
+    return { isCarb, isInsulin, value };
+}
+
 // STRUCTURED LOGGER
 function logDexcom(step, data) {
     const logEntry = {
@@ -295,8 +314,9 @@ async function syncData(accessToken) {
             }
             // Insert Events 
             for (const e of events) {
-                let carbs = e.value && e.unit === 'grams' ? e.value : null;
-                let insulin = e.value && e.unit === 'units' ? e.value : null;
+                const { isCarb, isInsulin, value } = classifyDexcomEvent(e);
+                const carbs = isCarb && value && value > 0 ? value : null;
+                const insulin = isInsulin && value && value > 0 ? value : null;
                 const measuredAt = normalizeDexcomTime(e.systemTime);
                 if (carbs || insulin) {
                     if (!measuredAt) continue;
@@ -304,7 +324,7 @@ async function syncData(accessToken) {
                         `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, carbs_grams, insulin_units, notes)
                         VALUES (NULL, $1, 'dexcom_api', $2, $3, $4)
                         ON CONFLICT DO NOTHING`,
-                        [measuredAt, carbs, insulin, `Dexcom Event: ${e.eventType}`]
+                        [measuredAt, carbs, insulin, `Dexcom Event: ${e.eventType || e.recordType || 'unknown'}`]
                     );
                 }
             }
@@ -386,14 +406,9 @@ async function syncData(accessToken) {
                         const eventMap = new Map();
 
                         chunkEvents.forEach(ev => {
-                            // Prefer eventType for v3 payloads; recordType is often just "event".
-                            let type = String(ev.eventType || ev.recordType || "").toLowerCase();
-                            if (type !== "carbs" && type !== "insulin") {
-                                const unit = String(ev.unit || "").toLowerCase();
-                                if (unit === "grams") type = "carbs";
-                                else if (unit === "units") type = "insulin";
-                            }
-                            if (type !== "carbs" && type !== "insulin") return;
+                            const { isCarb, isInsulin, value } = classifyDexcomEvent(ev);
+                            if (!isCarb && !isInsulin) return;
+                            if (!value || value <= 0) return;
 
                             const time = normalizeDexcomTime(ev.systemTime);
                             if (!time) return;
@@ -408,15 +423,14 @@ async function syncData(accessToken) {
                             }
 
                             const entry = eventMap.get(time);
-                            const val = Number(ev.value);
-                            if (!Number.isFinite(val) || val <= 0) return;
 
-                            if (type === 'carbs') {
-                                entry.carbs += val;
+                            if (isCarb) {
+                                entry.carbs += value;
                                 entry.notes.push(`Carbs: ${val}g`);
-                            } else if (type === 'insulin') {
-                                entry.insulin += val;
-                                entry.notes.push(`Insulin: ${val}u`);
+                            }
+                            if (isInsulin) {
+                                entry.insulin += value;
+                                entry.notes.push(`Insulin: ${value}u`);
                             }
                         });
 
