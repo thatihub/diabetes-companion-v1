@@ -1,6 +1,4 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 
 type GlucosePoint = {
@@ -21,11 +19,7 @@ type GlucoseGraphProps = {
 };
 
 export default function GlucoseGraph({ data, height = 200, title, summary, minimal = false }: GlucoseGraphProps) {
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    const isMounted = typeof window !== "undefined";
 
     if (!isMounted || !data || data.length === 0) {
         return (
@@ -164,7 +158,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                         />
 
                         <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#14b8a6" barSize={10} radius={[4, 4, 0, 0]} opacity={0.4} />
-                        <Bar yAxisId="insulin" dataKey="insulin_units" fill="#f43f5e" barSize={4} radius={[2, 2, 0, 0]} opacity={0.5} />
+                        <Bar yAxisId="insulin" dataKey="insulin_units" fill="#f43f5e" barSize={16} radius={[4, 4, 0, 0]} opacity={0.65} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>

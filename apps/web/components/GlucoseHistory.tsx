@@ -23,14 +23,14 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
         setIsMounted(true);
     }, []);
 
-    const fetchReadings = async () => {
-        try {
-            const data = await api.get<GlucoseReading[]>("/api/glucose?limit=5");
-            setReadings(data);
-        } catch (err) {
-            console.error("Failed to fetch history:", err);
-            setError("Could not load history.");
-        } finally {
+        const fetchReadings = async () => {
+            try {
+                const data = await api.get<GlucoseReading[]>("/api/glucose?limit=20");
+                setReadings(data);
+            } catch (err) {
+                console.error("Failed to fetch history:", err);
+                setError("Could not load history.");
+            } finally {
             setLoading(false);
         }
     };
@@ -64,11 +64,11 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-                <div>
-                    <h3 className="text-slate-100 text-lg font-bold tracking-tight">Timeline</h3>
-                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Late Activity</p>
-                </div>
+                        <div className="flex items-center justify-between px-2">
+                            <div>
+                                <h3 className="text-slate-100 text-lg font-bold tracking-tight">Timeline</h3>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Late Activity</p>
+                            </div>
                 <button
                     onClick={fetchReadings}
                     className="p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-full border border-slate-700/50 text-teal-400 transition-all active:scale-90"
@@ -85,17 +85,19 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                     >
                         <div className="flex items-center gap-4">
                             {/* Visual Indicator Layer */}
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center 
-                                ${reading.glucose_mgdl > 180 ? 'bg-amber-500/10 text-amber-500' :
-                                    reading.glucose_mgdl < 70 ? 'bg-rose-500/10 text-rose-500' :
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center 
+                                ${reading.glucose_mgdl && reading.glucose_mgdl > 180 ? 'bg-amber-500/10 text-amber-500' :
+                                    reading.glucose_mgdl !== null && reading.glucose_mgdl !== undefined && reading.glucose_mgdl < 70 ? 'bg-rose-500/10 text-rose-500' :
                                         'bg-teal-500/10 text-teal-500'}`}
                             >
-                                <span className="text-xl font-black">{reading.glucose_mgdl || '--'}</span>
+                                <span className="text-xl font-black">{reading.glucose_mgdl ?? '--'}</span>
                             </div>
 
                             <div>
                                 <p className="text-slate-100 text-xs font-bold uppercase tracking-wider">
-                                    {reading.meal_tag ? reading.meal_tag.replace('_', ' ') : 'General Log'}
+                                    {reading.glucose_mgdl === null || reading.glucose_mgdl === undefined
+                                        ? 'Dexcom Event'
+                                        : (reading.meal_tag ? reading.meal_tag.replace('_', ' ') : 'General Log')}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" suppressHydrationWarning={true}>
@@ -106,6 +108,9 @@ export default function GlucoseHistory({ refreshTrigger }: { refreshTrigger?: nu
                                     )}
                                     {reading.carbs_grams !== null && reading.carbs_grams !== undefined && (
                                         <span className="px-2 py-0.5 bg-teal-500/10 text-teal-400 text-[8px] font-black uppercase rounded-full">🍴 {reading.carbs_grams}g</span>
+                                    )}
+                                    {reading.notes && (
+                                        <span className="px-2 py-0.5 bg-slate-700/40 text-slate-300 text-[8px] font-black uppercase rounded-full">{reading.notes.slice(0, 40)}</span>
                                     )}
                                 </div>
                             </div>
