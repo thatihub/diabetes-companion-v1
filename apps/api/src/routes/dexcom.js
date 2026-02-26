@@ -9,6 +9,12 @@ export const dexcomRouter = Router();
 const DEX_BASE_URL = process.env.DEXCOM_BASE_URL || "https://api.dexcom.com";
 const TOKEN_FILE = path.resolve("dexcom_tokens.json");
 
+function normalizeDexcomTime(ts) {
+    if (typeof ts !== "string" || !ts.trim()) return null;
+    // Keep explicit timezone offsets as-is; append Z only when no timezone present.
+    return /([zZ]|[+\-]\d{2}:\d{2})$/.test(ts) ? ts : `${ts}Z`;
+}
+
 // STRUCTURED LOGGER
 function logDexcom(step, data) {
     const logEntry = {
@@ -259,11 +265,13 @@ async function syncData(accessToken) {
             // Insert (Shared logic)
             for (const r of egvs) {
                 if (r.value) {
+                    const measuredAt = normalizeDexcomTime(r.systemTime);
+                    if (!measuredAt) continue;
                     await query(
                         `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, notes)
                         VALUES ($1, $2, 'dexcom_api', 'Dexcom API (Sandbox 2020)')
                         ON CONFLICT DO NOTHING`,
-                        [r.value, r.systemTime.endsWith("Z") ? r.systemTime : r.systemTime + "Z"]
+                        [r.value, measuredAt]
                     );
                 }
             }
@@ -271,12 +279,14 @@ async function syncData(accessToken) {
             for (const e of events) {
                 let carbs = e.value && e.unit === 'grams' ? e.value : null;
                 let insulin = e.value && e.unit === 'units' ? e.value : null;
+                const measuredAt = normalizeDexcomTime(e.systemTime);
                 if (carbs || insulin) {
+                    if (!measuredAt) continue;
                     await query(
                         `INSERT INTO glucose_readings (glucose_mgdl, measured_at, source, carbs_grams, insulin_units, notes)
                         VALUES (NULL, $1, 'dexcom_api', $2, $3, $4)
                         ON CONFLICT DO NOTHING`,
-                        [e.systemTime.endsWith("Z") ? e.systemTime : e.systemTime + "Z", carbs, insulin, `Dexcom Event: ${e.eventType}`]
+                        [measuredAt, carbs, insulin, `Dexcom Event: ${e.eventType}`]
                     );
                 }
             }
@@ -358,10 +368,17 @@ async function syncData(accessToken) {
                         const eventMap = new Map();
 
                         chunkEvents.forEach(ev => {
-                            const type = ev.recordType || ev.eventType; // V3 vs V2
-                            if (type !== 'carbs' && type !== 'insulin') return;
+                            // Prefer eventType for v3 payloads; recordType is often just "event".
+                            let type = String(ev.eventType || ev.recordType || "").toLowerCase();
+                            if (type !== "carbs" && type !== "insulin") {
+                                const unit = String(ev.unit || "").toLowerCase();
+                                if (unit === "grams") type = "carbs";
+                                else if (unit === "units") type = "insulin";
+                            }
+                            if (type !== "carbs" && type !== "insulin") return;
 
-                            const time = ev.systemTime.endsWith("Z") ? ev.systemTime : ev.systemTime + "Z";
+                            const time = normalizeDexcomTime(ev.systemTime);
+                            if (!time) return;
 
                             if (!eventMap.has(time)) {
                                 eventMap.set(time, {
@@ -374,6 +391,7 @@ async function syncData(accessToken) {
 
                             const entry = eventMap.get(time);
                             const val = Number(ev.value);
+                            if (!Number.isFinite(val) || val <= 0) return;
 
                             if (type === 'carbs') {
                                 entry.carbs += val;
