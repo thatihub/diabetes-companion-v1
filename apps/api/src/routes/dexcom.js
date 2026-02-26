@@ -156,7 +156,28 @@ dexcomRouter.get("/events", async (req, res) => {
             `SELECT id, measured_at, carbs_grams, insulin_units, notes
              FROM glucose_readings
              WHERE source = 'dexcom_api'
-               AND (carbs_grams IS NOT NULL OR insulin_units IS NOT NULL)
+               AND (
+                 (carbs_grams IS NOT NULL AND carbs_grams > 0) OR
+                 (insulin_units IS NOT NULL AND insulin_units > 0) OR
+                 notes ILIKE 'Dexcom Event:%'
+               )
+             ORDER BY measured_at DESC
+             LIMIT 50`
+        );
+        res.json(rows.rows || rows);
+    } catch (err) {
+        logDexcom("EVENTS_ENDPOINT_ERROR", { error: err.message });
+        res.status(500).json({ error: "Failed to fetch events" });
+    }
+});
+
+// Optional raw view for debugging
+dexcomRouter.get("/events/raw", async (req, res) => {
+    try {
+        const rows = await query(
+            `SELECT id, measured_at, carbs_grams, insulin_units, notes
+             FROM glucose_readings
+             WHERE source = 'dexcom_api'
              ORDER BY measured_at DESC
              LIMIT 50`
         );
