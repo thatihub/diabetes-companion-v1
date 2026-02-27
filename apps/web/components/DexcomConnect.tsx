@@ -69,7 +69,7 @@ export default function DexcomConnect() {
 
     return (
         <div className="w-full">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-500 font-black text-xs shadow-inner">
                         <span className="tracking-tighter">Dx</span>
@@ -105,7 +105,7 @@ export default function DexcomConnect() {
                 <button
                     onClick={handleConnect}
                     disabled={isConnectDisabled}
-                    className={`group relative overflow-hidden whitespace-nowrap min-w-[112px] px-5 sm:px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-500
+                    className={`group relative overflow-hidden whitespace-nowrap min-w-[112px] w-full sm:w-auto px-5 sm:px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-500
                         ${isConnectDisabled
                             ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/30'
                             : 'bg-sky-500 text-slate-950 hover:bg-sky-400 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:scale-[1.02] active:scale-95 border border-sky-400/50'

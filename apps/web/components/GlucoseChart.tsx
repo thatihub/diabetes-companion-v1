@@ -122,14 +122,14 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const ranges: Range[] = ["24h", "3d", "7d", "14d", "30d", "90d"];
 
     return (
-        <div className="wellness-card mb-2 p-5 md:p-7">
+        <div className="wellness-card mb-2 p-5 md:p-7 overflow-visible">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 className="text-slate-100 text-lg font-bold tracking-tight">Clarity View</h3>
                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Continuous Trends</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-fit overflow-x-auto no-scrollbar">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+                    <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-full sm:w-fit overflow-x-auto no-scrollbar">
                         {ranges.map(r => (
                             <button
                                 key={r}
@@ -142,7 +142,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                         ))}
                     </div>
                     {metrics && (
-                        <div className="relative">
+                        <div className="relative self-start sm:self-auto">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowMetrics(v => !v); }}
                                 className="px-3 py-2 rounded-xl border border-slate-700/60 bg-slate-900/80 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95"
@@ -151,7 +151,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                             </button>
                             {showMetrics && metrics && (
                                 <div
-                                    className="absolute right-0 top-[calc(100%+8px)] z-30 w-80 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
+                                    className="absolute left-0 sm:left-auto sm:right-0 top-[calc(100%+8px)] z-30 w-80 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <div className="flex items-start justify-between">
