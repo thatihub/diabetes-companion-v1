@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
+import SpeakButton from "./SpeakButton";
 
 type GlucosePoint = {
     glucose_mgdl: number;
@@ -76,13 +77,18 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                 >
                                     <div className="flex items-start justify-between">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); setShowMetrics(false); }}
-                                            className="text-slate-500 hover:text-white"
-                                        >
-                                            ✕
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <SpeakButton
+                                                text="Time in range 74 percent. Average glucose 142 milligrams per deciliter. G M I 6.7 percent. Variability 31 percent. Average carbs per day 210 grams. Average insulin per day 38 units, basal 18, bolus 20. Events: lows 2, highs 6. Corrections: average 3.1 units, max 10 units."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setShowMetrics(false); }}
+                                                className="text-slate-500 hover:text-white"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm text-slate-200">
                                         <p><span className="font-bold text-teal-300">Time in Range:</span> 74% (7d)</p>

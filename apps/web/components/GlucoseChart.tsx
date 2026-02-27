@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 import { api } from "../lib/api";
+import SpeakButton from "./SpeakButton";
 
 type GlucosePoint = {
     glucose_mgdl: number;
@@ -81,6 +82,11 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
         };
     }, [data]);
 
+    const metricsSpeech = useMemo(() => {
+        if (!metrics) return "";
+        return `Time in range ${metrics.tir} percent for ${range}. Average glucose ${metrics.mean} milligrams per deciliter. G M I ${metrics.gmi} percent. Variability ${metrics.cv} percent. Average carbs per day ${metrics.carbsPerDay} grams. Average insulin per day ${metrics.insulinPerDay} units. Lows ${metrics.lows}, highs ${metrics.highs}. Corrections average ${metrics.correctionAvg} units, maximum ${metrics.correctionMax} units.`;
+    }, [metrics, range]);
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -143,7 +149,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                             >
                                 Metrics
                             </button>
-                            {showMetrics && (
+                            {showMetrics && metrics && (
                                 <div
                                     className="absolute right-0 top-[calc(100%+8px)] z-30 w-80 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
@@ -165,6 +171,9 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                                         <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> {metrics.insulinPerDay} u</p>
                                         <p><span className="font-bold text-amber-300">Events:</span> Lows: {metrics.lows} · Highs: {metrics.highs}</p>
                                         <p><span className="font-bold text-rose-300">Corrections:</span> Avg {metrics.correctionAvg} u · Max {metrics.correctionMax} u</p>
+                                        <div className="pt-1">
+                                            <SpeakButton text={metricsSpeech} />
+                                        </div>
                                     </div>
                                 </div>
                             )}
