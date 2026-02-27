@@ -33,7 +33,7 @@ export default function TrendsSplitView() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
-    const [stats, setStats] = useState({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
+    const [stats, setStats] = useState({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<WeekData | null>(null);
@@ -109,26 +109,38 @@ export default function TrendsSplitView() {
 
                 // Calculate Stats
                 if (rawPoints.length > 0) {
-                    const sum = rawPoints.reduce((acc, p) => acc + p.glucose_mgdl, 0);
-                    const avg = sum / rawPoints.length;
+                    const glucoseValues = rawPoints.map(p => p.glucose_mgdl);
+                    const sum = glucoseValues.reduce((acc, v) => acc + v, 0);
+                    const avg = sum / glucoseValues.length;
+                    const variance = glucoseValues.reduce((acc, v) => acc + Math.pow(v - avg, 2), 0) / glucoseValues.length;
+                    const sd = Math.sqrt(variance);
+                    const cv = avg > 0 ? (sd / avg) * 100 : 0;
                     const gmi = 3.31 + (0.02392 * avg);
 
                     const totalCarbs = rawPoints.reduce((acc, p) => acc + (Number(p.carbs_grams) || 0), 0);
                     const totalInsulin = rawPoints.reduce((acc, p) => acc + (Number(p.insulin_units) || 0), 0);
 
-                    // Daily Averages
                     const daysInPeriod = totalHours / 24;
                     const avgDailyCarbs = totalCarbs / daysInPeriod;
                     const avgDailyInsulin = totalInsulin / daysInPeriod;
 
+                    const tirCount = glucoseValues.filter(v => v >= 70 && v <= 180).length;
+                    const lows = glucoseValues.filter(v => v < 70).length;
+                    const highs = glucoseValues.filter(v => v > 250).length;
+                    const tir = Math.round((tirCount / glucoseValues.length) * 100);
+
                     setStats({
                         avg: Math.round(avg),
                         gmi: Number(gmi.toFixed(1)),
+                        cv: Math.round(cv),
+                        tir,
+                        lows,
+                        highs,
                         totalCarbs: Number(avgDailyCarbs.toFixed(1)),
                         totalInsulin: Number(avgDailyInsulin.toFixed(1))
                     });
                 } else {
-                    setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
+                    setStats({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
                 }
 
                 // Optimized Processing: One-pass grouping (O(N))
@@ -201,7 +213,7 @@ export default function TrendsSplitView() {
                 console.error("Failed to load trends data", err);
                 setError(err instanceof Error ? err.message : 'Failed to load data');
                 setWeeklyData([]);
-                setStats({ avg: 0, gmi: 0, totalCarbs: 0, totalInsulin: 0 });
+                setStats({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
             } finally {
                 setLoading(false);
             }
@@ -274,34 +286,25 @@ export default function TrendsSplitView() {
             )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 px-6 mb-10">
-                <div className="wellness-card p-6">
-                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Average Glucose</h3>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-slate-100">{stats.avg > 0 ? stats.avg : '--'}</span>
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">mg/dL</span>
-                    </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-6 mb-10">
+                <div className="wellness-card p-5">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Avg Glucose / GMI</h3>
+                    <p className="text-2xl font-black text-slate-100">{stats.avg > 0 ? stats.avg : '--'} mg/dL</p>
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">GMI {stats.gmi > 0 ? stats.gmi : '--'}%</p>
                 </div>
-                <div className="wellness-card p-6">
-                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">GMI (Est. A1C)</h3>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-slate-100">{stats.gmi > 0 ? stats.gmi : '--'}</span>
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">%</span>
-                    </div>
+                <div className="wellness-card p-5">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Time In Range</h3>
+                    <p className="text-2xl font-black text-teal-300">{stats.tir}%</p>
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">Lows: {stats.lows} · Highs: {stats.highs}</p>
                 </div>
-                <div className="wellness-card p-6">
-                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Carbs</h3>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-teal-400">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'}</span>
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">g/day</span>
-                    </div>
+                <div className="wellness-card p-5">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Variability (%CV)</h3>
+                    <p className="text-2xl font-black text-amber-300">{stats.cv}%</p>
                 </div>
-                <div className="wellness-card p-6">
-                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Insulin</h3>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-rose-400">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'}</span>
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">u/day</span>
-                    </div>
+                <div className="wellness-card p-5">
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Carbs / Insulin</h3>
+                    <p className="text-2xl font-black text-teal-300">{stats.totalCarbs > 0 ? stats.totalCarbs : '--'} g</p>
+                    <p className="text-[11px] font-bold text-rose-300 mt-1">{stats.totalInsulin > 0 ? stats.totalInsulin : '--'} u</p>
                 </div>
             </div>
 

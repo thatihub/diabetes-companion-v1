@@ -35,7 +35,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
 
     const cardClass = minimal
         ? "w-full overflow-visible"
-        : "wellness-card mx-6 p-8 mb-10 overflow-hidden";
+        : "wellness-card mx-6 p-8 mb-10 overflow-visible";
 
     return (
         <div className={cardClass}>
@@ -72,10 +72,10 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                             </button>
                             {showMetrics && (
                                 <div
-                                    className="absolute right-0 top-[calc(100%+8px)] z-20 w-72 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
+                                    className="absolute right-0 top-[calc(100%+8px)] z-20 w-72 max-h-72 overflow-y-auto rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/50"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <div className="flex items-start justify-between">
+                                    <div className="flex items-start justify-between sticky top-0 bg-slate-950/95 pb-2">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
                                         <div className="flex items-center gap-2">
                                             <SpeakButton
@@ -90,7 +90,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="mt-3 space-y-2 text-sm text-slate-200">
+                                    <div className="mt-3 space-y-2 text-sm text-slate-200 pr-1">
                                         <p><span className="font-bold text-teal-300">Time in Range:</span> 74% (7d)</p>
                                         <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> 142 mg/dL · 6.7%</p>
                                         <p><span className="font-bold text-slate-200">Variability (%CV):</span> 31%</p>
