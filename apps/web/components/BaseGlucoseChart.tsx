@@ -102,7 +102,7 @@ export default function BaseGlucoseChart({
                     name="Carbs (g)"
                     fill="#fb923c"
                     barSize={12}
-                    radius={[4, 4, 0, 0]}
+                    radius={[5, 5, 0, 0]}
                     fillOpacity={0.75}
                 />
 
@@ -112,8 +112,8 @@ export default function BaseGlucoseChart({
                     dataKey="insulin_units"
                     name="Insulin (u)"
                     fill="#8b5cf6"
-                    barSize={16}
-                    radius={[4, 4, 0, 0]}
+                    barSize={20}
+                    radius={[6, 6, 0, 0]}
                 />
 
             </ComposedChart>
