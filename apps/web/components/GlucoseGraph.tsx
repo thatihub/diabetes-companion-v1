@@ -52,12 +52,12 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                     {summary && (
                         <div className="flex items-center gap-6 bg-slate-800/20 px-6 py-3 rounded-[24px] border border-slate-700/30">
                             <div className="text-right">
-                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Metabolic Load</span>
+                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Carbs / Day</span>
                                 <span className="text-sm font-black text-teal-400">{summary.carbs}g</span>
                             </div>
                             <div className="w-px h-6 bg-slate-700"></div>
                             <div className="text-right">
-                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Correction</span>
+                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Insulin / Day</span>
                                 <span className="text-sm font-black text-rose-400">{summary.insulin}u</span>
                             </div>
                         </div>
