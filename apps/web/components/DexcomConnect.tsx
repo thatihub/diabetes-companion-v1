@@ -78,7 +78,7 @@ export default function DexcomConnect() {
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full relative">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-500 font-black text-xs shadow-inner">
@@ -188,11 +188,11 @@ export default function DexcomConnect() {
                     )}
                 </div>
             </div>
-        </div>
             {toast && (
-                <div className="fixed bottom-4 right-4 z-[9999] max-w-xs rounded-2xl border border-rose-400/50 bg-rose-500/20 px-4 py-3 text-[12px] font-semibold text-rose-50 shadow-xl">
+                <div className="absolute bottom-[-76px] right-0 z-[9999] max-w-xs rounded-2xl border border-rose-400/50 bg-rose-500/20 px-4 py-3 text-[12px] font-semibold text-rose-50 shadow-xl">
                     {toast}
                 </div>
             )}
+        </div>
     );
 }
