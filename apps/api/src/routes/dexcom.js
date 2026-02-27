@@ -384,7 +384,17 @@ async function getValidToken() {
  * Sync Logic
  */
 async function syncData(accessToken) {
-    let stats = { validRange: false, count: 0, latest: null };
+    let stats = {
+        validRange: false,
+        count: 0,
+        latest: null,
+        carb_events: 0,
+        insulin_events: 0,
+        last_carb: null,
+        last_insulin: null,
+        carb_gap_hours: null,
+        event_summary: {}
+    };
     let startDate, endDate;
 
     try {
@@ -455,6 +465,16 @@ async function syncData(accessToken) {
                 const carbs = isCarb && value && value > 0 ? value : null;
                 const insulin = isInsulin && value && value > 0 ? value : null;
                 const measuredAt = normalizeDexcomTime(e.systemTime);
+                const summaryKey = `${String(e.eventType || e.recordType || "unknown").toLowerCase()}|${String(e.eventSubType || "none").toLowerCase()}|${String(e.unit || "unknown").toLowerCase()}`;
+                stats.event_summary[summaryKey] = (stats.event_summary[summaryKey] || 0) + 1;
+                if (carbs) {
+                    stats.carb_events += 1;
+                    if (!stats.last_carb || new Date(measuredAt) > new Date(stats.last_carb)) stats.last_carb = measuredAt;
+                }
+                if (insulin) {
+                    stats.insulin_events += 1;
+                    if (!stats.last_insulin || new Date(measuredAt) > new Date(stats.last_insulin)) stats.last_insulin = measuredAt;
+                }
                 if (carbs || insulin) {
                     if (!measuredAt) continue;
                     await query(
@@ -466,6 +486,16 @@ async function syncData(accessToken) {
                 }
             }
 
+            if (stats.last_carb) {
+                const gapMs = Date.now() - new Date(stats.last_carb).getTime();
+                stats.carb_gap_hours = Number((gapMs / (1000 * 60 * 60)).toFixed(1));
+            } else {
+                stats.carb_gap_hours = null;
+            }
+            if (!stats.last_carb || stats.carb_gap_hours > 24) {
+                logDexcom("CARB_GAP_ALERT", { hours_since: stats.carb_gap_hours, last_carb: stats.last_carb });
+            }
+            logDexcom("EVENT_SUMMARY", { event_summary: stats.event_summary, carb_events: stats.carb_events, insulin_events: stats.insulin_events });
             saveSyncState(stats);
             return stats;
         }
@@ -551,6 +581,18 @@ async function syncData(accessToken) {
                             const time = normalizeDexcomTime(ev.systemTime);
                             if (!time) return;
 
+                            const summaryKey = `${String(ev.eventType || ev.recordType || "unknown").toLowerCase()}|${String(ev.eventSubType || "none").toLowerCase()}|${String(ev.unit || "unknown").toLowerCase()}`;
+                            stats.event_summary[summaryKey] = (stats.event_summary[summaryKey] || 0) + 1;
+
+                            if (isCarb) {
+                                stats.carb_events += 1;
+                                if (!stats.last_carb || new Date(time) > new Date(stats.last_carb)) stats.last_carb = time;
+                            }
+                            if (isInsulin) {
+                                stats.insulin_events += 1;
+                                if (!stats.last_insulin || new Date(time) > new Date(stats.last_insulin)) stats.last_insulin = time;
+                            }
+
                             if (!eventMap.has(time)) {
                                 eventMap.set(time, {
                                     time,
@@ -612,6 +654,16 @@ async function syncData(accessToken) {
                 }
             }
 
+            if (stats.last_carb) {
+                const gapMs = Date.now() - new Date(stats.last_carb).getTime();
+                stats.carb_gap_hours = Number((gapMs / (1000 * 60 * 60)).toFixed(1));
+            } else {
+                stats.carb_gap_hours = null;
+            }
+            if (!stats.last_carb || stats.carb_gap_hours > 24) {
+                logDexcom("CARB_GAP_ALERT", { hours_since: stats.carb_gap_hours, last_carb: stats.last_carb });
+            }
+            logDexcom("EVENT_SUMMARY", { event_summary: stats.event_summary, carb_events: stats.carb_events, insulin_events: stats.insulin_events });
             saveSyncState(stats);
         } else {
             console.log("[Dexcom Sync] No range data found. Skipping deep sync.");
