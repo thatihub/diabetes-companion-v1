@@ -198,7 +198,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                             activeDot={{ r: 6, stroke: '#0f172a', strokeWidth: 3, fill: '#14b8a6' }}
                         />
 
-                        <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#14b8a6" barSize={12} radius={[5, 5, 0, 0]} opacity={0.5} />
+                        <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#38bdf8" barSize={12} radius={[5, 5, 0, 0]} opacity={0.9} />
                         <Bar yAxisId="insulin" dataKey="insulin_units" fill="#f43f5e" barSize={20} radius={[6, 6, 0, 0]} opacity={0.8} />
                     </ComposedChart>
                 </ResponsiveContainer>

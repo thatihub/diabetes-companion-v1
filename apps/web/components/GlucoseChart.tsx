@@ -303,7 +303,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                                 activeDot={{ r: 6, fill: '#f8fafc', stroke: '#94d2bd', strokeWidth: 2 }}
                             />
 
-                            <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#10b981" barSize={12} radius={[5, 5, 0, 0]} opacity={0.75} />
+                            <Bar yAxisId="carbs" dataKey="carbs_grams" fill="#38bdf8" barSize={12} radius={[5, 5, 0, 0]} opacity={0.9} />
                             <Bar yAxisId="insulin" dataKey="insulin_units" fill="#f43f5e" barSize={20} radius={[6, 6, 0, 0]} opacity={0.88} />
                         </ComposedChart>
                     </ResponsiveContainer>
