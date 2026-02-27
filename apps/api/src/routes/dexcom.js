@@ -224,6 +224,45 @@ dexcomRouter.get("/events/live", async (req, res) => {
     }
 });
 
+// 3e. GET /api/dexcom/events/live/summary?hours=48 — summarize event types/units (no DB write)
+dexcomRouter.get("/events/live/summary", async (req, res) => {
+    try {
+        const token = await getValidToken();
+        if (!token) return res.status(401).json({ error: "Not connected to Dexcom" });
+
+        const hours = Math.min(Math.max(Number(req.query.hours) || 48, 1), 168); // clamp 1..168
+        const end = new Date();
+        const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+        const fmt = (d) => d.toISOString().split('.')[0];
+        const s = fmt(start);
+        const e = fmt(end);
+
+        const version = DEX_BASE_URL.includes("sandbox") ? "v2" : "v3";
+        const eventsUrl = `${DEX_BASE_URL}/${version}/users/self/events?startDate=${s}&endDate=${e}`;
+
+        const eventsRes = await axios.get(eventsUrl, {
+            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+        });
+
+        const events = version === "v3" ? (eventsRes.data.records || []) : (eventsRes.data.events || []);
+
+        const summary = {};
+        events.forEach(ev => {
+            const key = [
+                String(ev.eventType || ev.recordType || "unknown").toLowerCase(),
+                String(ev.eventSubType || "na").toLowerCase(),
+                String(ev.unit || "na").toLowerCase(),
+            ].join("|");
+            summary[key] = (summary[key] || 0) + 1;
+        });
+
+        res.json({ hours, count: events.length, types: summary });
+    } catch (err) {
+        logDexcom("LIVE_EVENTS_SUMMARY_ERROR", { error: err.response?.data || err.message });
+        res.status(500).json({ error: err.message });
+    }
+});
+
 /**
  * 4. GET /api/dexcom/sync
  */
