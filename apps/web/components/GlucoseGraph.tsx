@@ -35,7 +35,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
 
     const cardClass = minimal
         ? "w-full overflow-visible"
-        : "wellness-card mx-6 p-8 mb-10 overflow-visible";
+        : "wellness-card mx-6 p-8 mb-10 overflow-visible relative";
 
     return (
         <div className={cardClass}>
