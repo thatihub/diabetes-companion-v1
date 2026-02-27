@@ -50,7 +50,7 @@ async function fetcher<T>(endpoint: string, { data, ...customConfig }: ApiOption
 
         // HTML Response (Cloudflare/Proxy Error) - Don't show raw HTML
         if (errorBody.trim().startsWith('<')) {
-            console.error("API returned HTML Error:", errorBody.substring(0, 500)); // Log it for dev
+            console.warn(`API returned non-JSON (status ${response.status}). Suppressing HTML body.`);
             throw new Error(`API Connection Error: ${response.status} ${response.statusText} (Service Protected)`);
         }
 
