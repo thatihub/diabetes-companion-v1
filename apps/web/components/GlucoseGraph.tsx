@@ -64,18 +64,21 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setShowMetrics((v) => !v)}
+                                onClick={(e) => { e.stopPropagation(); setShowMetrics((v) => !v); }}
                                 className="ml-2 rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95"
                             >
                                 Metrics
                             </button>
                             {showMetrics && (
-                                <div className="absolute right-0 top-[calc(100%+8px)] z-20 w-72 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl">
+                                <div
+                                    className="absolute right-0 top-[calc(100%+8px)] z-20 w-72 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <div className="flex items-start justify-between">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
                                         <button
                                             type="button"
-                                            onClick={() => setShowMetrics(false)}
+                                            onClick={(e) => { e.stopPropagation(); setShowMetrics(false); }}
                                             className="text-slate-500 hover:text-white"
                                         >
                                             ✕
