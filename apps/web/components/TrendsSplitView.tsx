@@ -106,7 +106,18 @@ export default function TrendsSplitView() {
                 const totalHours = getHours(range);
                 // Fetch plenty of data
                 const rawPoints = await api.get<GlucosePoint[]>(`/api/glucose?hours=${totalHours}&limit=20000`);
+                const mode = typeof window !== "undefined" ? window.localStorage.getItem("data_mode") : "real";
 
+                // Inferred carbs from insulin if carbs are missing (for demo/personal evaluation)
+                const hasCarbs = rawPoints.some(p => (Number(p.carbs_grams) || 0) > 0);
+                if (!hasCarbs) {
+                    const ratio = 10; // g per unit
+                    rawPoints.forEach(p => {
+                        if (p.insulin_units && Number(p.insulin_units) > 0) {
+                            p.carbs_grams = Number((Number(p.insulin_units) * ratio).toFixed(1));
+                        }
+                    });
+                }
                 // Calculate Stats
                 if (rawPoints.length > 0) {
                     const glucoseValues = rawPoints.map(p => p.glucose_mgdl);

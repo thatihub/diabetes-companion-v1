@@ -21,6 +21,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const [range, setRange] = useState<Range>(initialRange);
     const [isMounted, setIsMounted] = useState(false);
     const [showMetrics, setShowMetrics] = useState(false);
+    const [inferredCarbsUsed, setInferredCarbsUsed] = useState(false);
 
     const getHours = (r: Range) => {
         switch (r) {
@@ -94,6 +95,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             try {
                 const hours = getHours(range);
                 const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=10000`);
+                const mode = typeof window !== "undefined" ? window.localStorage.getItem("data_mode") : "real";
 
                 const sorted = points
                     .filter(p => p.measured_at && !isNaN(new Date(p.measured_at).getTime()))
@@ -107,6 +109,21 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                             : new Date(p.measured_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
                         fullTime: new Date(p.measured_at).toLocaleString()
                     }));
+                // Inferred carbs from insulin when none present (for demo/personal evaluation)
+                const hasCarbs = sorted.some(p => (p.carbs_grams ?? 0) > 0);
+                if (!hasCarbs) {
+                    const ratio = 10; // g per unit, demo default
+                    let injected = false;
+                    sorted.forEach(p => {
+                        if ((p.insulin_units ?? 0) > 0) {
+                            p.carbs_grams = Number(((p.insulin_units ?? 0) * ratio).toFixed(1));
+                            injected = true;
+                        }
+                    });
+                    setInferredCarbsUsed(injected);
+                } else {
+                    setInferredCarbsUsed(false);
+                }
                 setData(sorted);
             } catch (err) {
                 console.error("Failed to load chart data", err);
@@ -127,6 +144,11 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                 <div>
                     <h3 className="text-slate-100 text-lg font-bold tracking-tight">Clarity View</h3>
                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Continuous Trends</p>
+                    {inferredCarbsUsed && (
+                        <p className="mt-1 inline-flex items-center rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200">
+                            Inferred carbs (from bolus)
+                        </p>
+                    )}
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                     <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-full sm:w-fit overflow-x-auto no-scrollbar">
