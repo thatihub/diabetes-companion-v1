@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 import { api } from "../lib/api";
 
@@ -19,6 +19,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     const [error, setError] = useState<string | null>(null);
     const [range, setRange] = useState<Range>(initialRange);
     const [isMounted, setIsMounted] = useState(false);
+    const [showMetrics, setShowMetrics] = useState(false);
 
     const getHours = (r: Range) => {
         switch (r) {
@@ -35,6 +36,50 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    const metrics = useMemo(() => {
+        if (!data || data.length === 0) return null;
+
+        const glucoseValues = data.map(d => d.glucose_mgdl).filter((v) => Number.isFinite(v));
+        const n = glucoseValues.length || 1;
+        const mean = glucoseValues.reduce((a, b) => a + b, 0) / n;
+        const variance = glucoseValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+        const sd = Math.sqrt(variance);
+        const cv = mean > 0 ? (sd / mean) * 100 : 0;
+        const inRange = glucoseValues.filter(v => v >= 70 && v <= 180).length;
+        const lows = glucoseValues.filter(v => v < 70).length;
+        const highs = glucoseValues.filter(v => v > 250).length;
+
+        const carbsTotal = data.reduce((a, d) => a + (Number(d.carbs_grams) || 0), 0);
+        const insulinTotal = data.reduce((a, d) => a + (Number(d.insulin_units) || 0), 0);
+
+        const times = data.map(d => new Date(d.measured_at).getTime());
+        const spanDays = Math.max(1, (Math.max(...times) - Math.min(...times)) / (1000 * 60 * 60 * 24));
+
+        const carbsPerDay = carbsTotal / spanDays;
+        const insulinPerDay = insulinTotal / spanDays;
+
+        const correctionValues = data
+            .map(d => Number(d.insulin_units) || 0)
+            .filter(v => v > 0);
+        const correctionAvg = correctionValues.length
+            ? correctionValues.reduce((a, b) => a + b, 0) / correctionValues.length
+            : 0;
+        const correctionMax = correctionValues.length ? Math.max(...correctionValues) : 0;
+
+        return {
+            tir: Math.round((inRange / n) * 100),
+            mean: Math.round(mean),
+            gmi: (mean * 0.0235 + 2.6).toFixed(1),
+            cv: Math.round(cv),
+            carbsPerDay: Math.round(carbsPerDay),
+            insulinPerDay: Math.round(insulinPerDay),
+            lows,
+            highs,
+            correctionAvg: correctionAvg.toFixed(1),
+            correctionMax: correctionMax.toFixed(0),
+        };
+    }, [data]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -77,17 +122,54 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                     <h3 className="text-slate-100 text-lg font-bold tracking-tight">Clarity View</h3>
                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Continuous Trends</p>
                 </div>
-                <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-fit overflow-x-auto no-scrollbar">
-                    {ranges.map(r => (
-                        <button
-                            key={r}
-                            onClick={() => setRange(r)}
-                            className={`px-4 py-2 text-[10px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap
-                                ${range === r ? 'bg-slate-700 text-teal-400 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                        >
-                            {r}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-2">
+                    <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-slate-700/50 w-fit overflow-x-auto no-scrollbar">
+                        {ranges.map(r => (
+                            <button
+                                key={r}
+                                onClick={() => setRange(r)}
+                                className={`px-4 py-2 text-[10px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap
+                                    ${range === r ? 'bg-slate-700 text-teal-400 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                {r}
+                            </button>
+                        ))}
+                    </div>
+                    {metrics && (
+                        <div className="relative">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowMetrics(v => !v); }}
+                                className="px-3 py-2 rounded-xl border border-slate-700/60 bg-slate-900/80 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95"
+                            >
+                                Metrics
+                            </button>
+                            {showMetrics && (
+                                <div
+                                    className="absolute right-0 top-[calc(100%+8px)] z-30 w-80 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowMetrics(false); }}
+                                            className="text-slate-500 hover:text-white"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-200">
+                                        <p><span className="font-bold text-teal-300">Time in Range:</span> {metrics.tir}% ({range})</p>
+                                        <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> {metrics.mean} mg/dL · {metrics.gmi}%</p>
+                                        <p><span className="font-bold text-slate-200">Variability (%CV):</span> {metrics.cv}%</p>
+                                        <p><span className="font-bold text-teal-300">Avg Carbs / Day:</span> {metrics.carbsPerDay} g</p>
+                                        <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> {metrics.insulinPerDay} u</p>
+                                        <p><span className="font-bold text-amber-300">Events:</span> Lows: {metrics.lows} · Highs: {metrics.highs}</p>
+                                        <p><span className="font-bold text-rose-300">Corrections:</span> Avg {metrics.correctionAvg} u · Max {metrics.correctionMax} u</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
