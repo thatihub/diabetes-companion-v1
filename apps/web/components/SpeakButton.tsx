@@ -10,11 +10,27 @@ type SpeakButtonProps = {
 export default function SpeakButton({ text, className }: SpeakButtonProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [loadingAi, setLoadingAi] = useState(false);
+  const [voicesReady, setVoicesReady] = useState(false);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cacheRef = useRef<Map<string, string>>(new Map()); // key -> object URL
+  const localUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
+    if (!supported) return;
+    const primeVoices = () => {
+      window.speechSynthesis.getVoices();
+      setVoicesReady(true);
+    };
+    primeVoices();
+    window.speechSynthesis.onvoiceschanged = primeVoices;
+
     return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      if (localUtteranceRef.current) {
+        window.speechSynthesis.cancel();
+        localUtteranceRef.current = null;
+      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -28,6 +44,10 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
   const label = useMemo(() => (isSpeaking ? "Stop Audio" : "Read Aloud"), [isSpeaking]);
 
   const stopAll = () => {
+    if (localUtteranceRef.current) {
+      window.speechSynthesis.cancel();
+      localUtteranceRef.current = null;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -40,11 +60,6 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
   const speak = (spokenText: string, preferredName?: string) => {
     if (!supported) return;
     if (!spokenText?.trim()) return;
-
-    if (isSpeaking) {
-      stopAll();
-      if (!preferredName) return;
-    }
 
     stopAll();
     const utterance = new SpeechSynthesisUtterance(spokenText);
@@ -59,8 +74,25 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
+    localUtteranceRef.current = utterance;
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const playAudioUrl = (url: string) => {
+    stopAll();
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.onended = () => {
+      audioRef.current = null;
+      setIsSpeaking(false);
+    };
+    audio.onerror = () => {
+      audioRef.current = null;
+      setIsSpeaking(false);
+    };
+    setIsSpeaking(true);
+    audio.play();
   };
 
   const speakWithOpenAI = async (spokenText: string, openAiVoice: "nova" | "shimmer") => {
@@ -73,6 +105,14 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
 
     try {
       setLoadingAi(true);
+      const cacheKey = `${openAiVoice}:${spokenText}`;
+      const cachedUrl = cacheRef.current.get(cacheKey);
+      if (cachedUrl) {
+        setLoadingAi(false);
+        playAudioUrl(cachedUrl);
+        return;
+      }
+
       const response = await fetch("/api/insights/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,25 +125,10 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
 
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
-      const audio = new Audio(objectUrl);
-      audioRef.current = audio;
+      cacheRef.current.set(cacheKey, objectUrl);
 
-      audio.onended = () => {
-        URL.revokeObjectURL(objectUrl);
-        audioRef.current = null;
-        setIsSpeaking(false);
-        setLoadingAi(false);
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        audioRef.current = null;
-        setIsSpeaking(false);
-        setLoadingAi(false);
-      };
-
-      setIsSpeaking(true);
       setLoadingAi(false);
-      await audio.play();
+      playAudioUrl(objectUrl);
     } catch (err) {
       console.error("OpenAI TTS failed, falling back to local speech:", err);
       setLoadingAi(false);
@@ -112,11 +137,20 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
   };
 
   const handleToggleSpeak = () => {
-    if (loadingAi) return; // ignore clicks while loading
+    if (!text?.trim()) return;
+
+    // If already speaking, stop.
     if (isSpeaking) {
       stopAll();
       return;
     }
+
+    // Instant local voice for zero-lag.
+    if (supported) {
+      speak(text);
+    }
+
+    // Kick off high-quality TTS; cached if already fetched.
     speakWithOpenAI(text, "nova");
   };
 
@@ -124,7 +158,7 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
     <div className={`${className || ""}`}>
       <button
         onClick={handleToggleSpeak}
-        disabled={!supported || !text?.trim() || loadingAi}
+        disabled={!text?.trim() || loadingAi}
         className="app-btn text-[10px]"
         aria-label={label}
         title={label}
