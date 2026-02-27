@@ -112,7 +112,8 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
   };
 
   const handleToggleSpeak = () => {
-    if (isSpeaking || loadingAi) {
+    if (loadingAi) return; // ignore clicks while loading
+    if (isSpeaking) {
       stopAll();
       return;
     }
@@ -123,7 +124,7 @@ export default function SpeakButton({ text, className }: SpeakButtonProps) {
     <div className={`${className || ""}`}>
       <button
         onClick={handleToggleSpeak}
-        disabled={!supported || !text?.trim()}
+        disabled={!supported || !text?.trim() || loadingAi}
         className="app-btn text-[10px]"
         aria-label={label}
         title={label}
