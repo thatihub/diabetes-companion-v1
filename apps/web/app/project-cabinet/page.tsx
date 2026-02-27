@@ -21,6 +21,29 @@ const EXTERNAL_LINKS = [
   },
 ];
 
+const OBSERVABILITY_LINKS = [
+  {
+    label: "Dexcom Status (last sync, carb gap, summary)",
+    href: "https://diabetes-companion-api.onrender.com/api/dexcom/status",
+    description: "JSON status with last_sync, last_carb/insulin, carb_gap_hours, event mix.",
+  },
+  {
+    label: "Dexcom Events Summary (live window)",
+    href: "https://diabetes-companion-api.onrender.com/api/dexcom/events/live/summary",
+    description: "Type/unit counts; use ?hours=24 or ?hours=6 to change window.",
+  },
+  {
+    label: "Dexcom Events Raw (debug)",
+    href: "https://diabetes-companion-api.onrender.com/api/dexcom/events/live",
+    description: "Raw Dexcom events for the window (?hours=48).",
+  },
+  {
+    label: "Recent Ingested Events (DB)",
+    href: "https://diabetes-companion-api.onrender.com/api/dexcom/events",
+    description: "Last 50 carb/insulin entries stored in Supabase.",
+  },
+];
+
 const INTERNAL_LINKS = [
   {
     label: "Dexcom Support Email",
@@ -36,19 +59,19 @@ const INTERNAL_LINKS = [
 
 const RECENT_COMMITS = [
   {
-    hash: "bb20fdb",
+    hash: "e5de0e0",
     date: "2026-02-27",
-    message: "ui: add TTS read-out to metrics popovers.",
+    message: "ux: suppress HTML error body in api fetcher.",
   },
   {
-    hash: "414155d",
+    hash: "651742d",
     date: "2026-02-27",
-    message: "ui: increase insulin bar thickness across charts.",
+    message: "obs: warn when carbs absent and log event mix.",
   },
   {
-    hash: "29add06",
-    date: "2026-02-26",
-    message: "chore(dexcom): add live events summary endpoint.",
+    hash: "5112fca",
+    date: "2026-02-27",
+    message: "ui: make metrics popover scrollable.",
   },
 ];
 
@@ -86,11 +109,11 @@ export default function ProjectCabinetPage() {
                 <dd className="font-medium text-emerald-300">Active</dd>
 
                 <dt className="text-slate-400">Release</dt>
-                <dd className="font-medium text-sky-300">1.3.1</dd>
+                <dd className="font-medium text-sky-300">1.3.2</dd>
 
                 <dt className="text-slate-400">Latest sync</dt>
                 <dd className="font-medium text-slate-200">
-                  2026-02-27 · <code className="font-mono text-slate-100">bb20fdb</code>
+                  2026-02-27 · <code className="font-mono text-slate-100">e5de0e0</code>
                 </dd>
               </dl>
             </div>
@@ -103,6 +126,26 @@ export default function ProjectCabinetPage() {
           </h2>
           <div className="grid gap-3 md:grid-cols-3">
             {EXTERNAL_LINKS.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-2xl border border-slate-800 bg-slate-900 p-4 hover:border-slate-600"
+              >
+                <p className="text-base font-medium">{item.label}</p>
+                <p className="mt-1 text-sm text-slate-400">{item.description}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Observability & Diagnostics
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            {OBSERVABILITY_LINKS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
