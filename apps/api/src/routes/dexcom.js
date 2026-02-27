@@ -8,6 +8,43 @@ export const dexcomRouter = Router();
 
 const DEX_BASE_URL = process.env.DEXCOM_BASE_URL || "https://api.dexcom.com";
 const TOKEN_FILE = path.resolve("dexcom_tokens.json");
+const SYNC_STATE_FILE = path.resolve("dexcom_sync.json");
+
+function fetchWithRetry(url, options, attempts = 3, baseDelayMs = 500) {
+    let attempt = 0;
+    const run = () =>
+        axios({ url, ...options }).catch(async (err) => {
+            attempt += 1;
+            if (attempt >= attempts) throw err;
+            const delay = baseDelayMs * Math.pow(2, attempt - 1);
+            await new Promise((r) => setTimeout(r, delay));
+            return run();
+        });
+    return run();
+}
+
+function saveSyncState(stats) {
+    const payload = {
+        last_sync_at: new Date().toISOString(),
+        stats,
+    };
+    try {
+        fs.writeFileSync(SYNC_STATE_FILE, JSON.stringify(payload, null, 2));
+    } catch (e) {
+        console.error("[Dexcom Sync] Failed to write sync state:", e.message);
+    }
+}
+
+function loadSyncState() {
+    try {
+        if (fs.existsSync(SYNC_STATE_FILE)) {
+            return JSON.parse(fs.readFileSync(SYNC_STATE_FILE, "utf8"));
+        }
+    } catch (e) {
+        console.error("[Dexcom Sync] Failed to read sync state:", e.message);
+    }
+    return null;
+}
 
 function normalizeDexcomTime(ts) {
     if (typeof ts !== "string" || !ts.trim()) return null;
@@ -146,11 +183,14 @@ dexcomRouter.get("/status", async (req, res) => {
     try {
         const tokens = JSON.parse(fs.readFileSync(TOKEN_FILE, "utf8"));
         const isExpired = Date.now() > tokens.expires_at;
+        const syncState = loadSyncState();
         res.json({
             connected: true,
             expires_at: new Date(tokens.expires_at).toISOString(),
             is_expired: isExpired,
-            last_updated: tokens.updated_at
+            last_updated: tokens.updated_at,
+            last_sync: syncState?.last_sync_at || null,
+            last_sync_stats: syncState?.stats || null,
         });
     } catch (e) {
         res.status(500).json({ error: "Failed to read token file" });
@@ -350,7 +390,8 @@ async function syncData(accessToken) {
     try {
         // 1. Data Range
         logDexcom("RANGE_REQUEST", { url: `${DEX_BASE_URL}/v2/users/self/dataRange` });
-        const rangeRes = await axios.get(`${DEX_BASE_URL}/v2/users/self/dataRange`, {
+        const rangeRes = await fetchWithRetry(`${DEX_BASE_URL}/v2/users/self/dataRange`, {
+            method: "GET",
             headers: { Authorization: `Bearer ${accessToken}` }
         });
         logDexcom("RANGE_RESPONSE", { status: rangeRes.status, data: rangeRes.data });
@@ -384,8 +425,8 @@ async function syncData(accessToken) {
             logDexcom("EGV_FETCH_REQUEST", { url: egvUrl });
 
             const [egvRes, eventsRes] = await Promise.all([
-                axios.get(egvUrl, { headers: { Authorization: `Bearer ${accessToken}` } }),
-                axios.get(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}` } })
+                fetchWithRetry(egvUrl, { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } }),
+                fetchWithRetry(eventsUrl, { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } })
             ]);
 
             logDexcom("EGV_FETCH_RESPONSE", { status: egvRes.status, count: egvRes.data.egvs ? egvRes.data.egvs.length : 0 });
@@ -425,6 +466,7 @@ async function syncData(accessToken) {
                 }
             }
 
+            saveSyncState(stats);
             return stats;
         }
 
@@ -457,8 +499,8 @@ async function syncData(accessToken) {
 
                 try {
                     const [egvRes, eventsRes] = await Promise.all([
-                        axios.get(egvUrl, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } }),
-                        axios.get(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } })
+                        fetchWithRetry(egvUrl, { method: "GET", headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } }),
+                        fetchWithRetry(eventsUrl, { method: "GET", headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } })
                     ]);
 
                     const chunkEgvs = version === "v3" ? (egvRes.data.records || []) : (egvRes.data.egvs || []);
@@ -569,6 +611,8 @@ async function syncData(accessToken) {
                     console.error(`[Dexcom Sync] Chunk ${i + 1} failed:`, chunkErr.response?.data || chunkErr.message);
                 }
             }
+
+            saveSyncState(stats);
         } else {
             console.log("[Dexcom Sync] No range data found. Skipping deep sync.");
         }

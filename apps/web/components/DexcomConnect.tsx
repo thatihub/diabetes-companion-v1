@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { api } from "../lib/api";
 
 const DATA_MODE_KEY = "data_mode";
 const MODE_EVENT = "data-mode-change";
@@ -26,6 +27,7 @@ function subscribeDataMode(onStoreChange: () => void): () => void {
 export default function DexcomConnect() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<string | null>(null);
+    const [lastSync, setLastSync] = useState<string | null>(null);
     const mode = useSyncExternalStore(subscribeDataMode, readDataMode, () => "real");
     const isDemoMode = mode === "demo";
     const isSyncing = status === "syncing";
@@ -46,6 +48,18 @@ export default function DexcomConnect() {
             };
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const res = await api.get<{ last_sync?: string; last_sync_stats?: { count?: number; latest?: string; }; }>("https://diabetes-companion-api.onrender.com/api/dexcom/status");
+                setLastSync(res.last_sync || null);
+            } catch {
+                setLastSync(null);
+            }
+        };
+        fetchStatus();
+    }, []);
 
     const handleConnect = () => {
         if (isDemoMode) return;
@@ -137,9 +151,16 @@ export default function DexcomConnect() {
                     <span className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : isDemoMode ? "bg-amber-200/35" : "animate-pulse bg-slate-300/25"}`} />
                     <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
                 </span>
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : isDemoMode ? "text-amber-300" : "text-slate-400"}`}>
-                    {isSyncing ? "Protocol Initiated — Data Stream Updating" : isDemoMode ? "Demo mode — Live sync is disabled" : "Ready — Sync is on standby"}
-                </p>
+                <div className="flex flex-col gap-1">
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : isDemoMode ? "text-amber-300" : "text-slate-400"}`}>
+                        {isSyncing ? "Protocol Initiated — Data Stream Updating" : isDemoMode ? "Demo mode — Live sync is disabled" : "Ready — Sync is on standby"}
+                    </p>
+                    {lastSync && (
+                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                            Last successful sync: {new Date(lastSync).toLocaleString()}
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );
