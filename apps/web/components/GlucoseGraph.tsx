@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 
 type GlucosePoint = {
@@ -20,6 +21,7 @@ type GlucoseGraphProps = {
 
 export default function GlucoseGraph({ data, height = 200, title, summary, minimal = false }: GlucoseGraphProps) {
     const isMounted = typeof window !== "undefined";
+    const [showMetrics, setShowMetrics] = useState(false);
 
     if (!isMounted || !data || data.length === 0) {
         return (
@@ -50,7 +52,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                         )}
                     </div>
                     {summary && (
-                        <div className="flex items-center gap-6 bg-slate-800/20 px-6 py-3 rounded-[24px] border border-slate-700/30">
+                        <div className="flex items-center gap-4 bg-slate-800/20 px-6 py-3 rounded-[24px] border border-slate-700/30 relative">
                             <div className="text-right">
                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Carbs / Day</span>
                                 <span className="text-sm font-black text-teal-400">{summary.carbs}g</span>
@@ -60,6 +62,36 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Insulin / Day</span>
                                 <span className="text-sm font-black text-rose-400">{summary.insulin}u</span>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowMetrics((v) => !v)}
+                                className="ml-2 rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95"
+                            >
+                                Metrics
+                            </button>
+                            {showMetrics && (
+                                <div className="absolute right-0 top-[calc(100%+8px)] z-20 w-72 rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl">
+                                    <div className="flex items-start justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMetrics(false)}
+                                            className="text-slate-500 hover:text-white"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <div className="mt-3 space-y-2 text-sm text-slate-200">
+                                        <p><span className="font-bold text-teal-300">Time in Range:</span> 74% (7d)</p>
+                                        <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> 142 mg/dL · 6.7%</p>
+                                        <p><span className="font-bold text-slate-200">Variability (%CV):</span> 31%</p>
+                                        <p><span className="font-bold text-teal-300">Avg Carbs / Day:</span> 210 g</p>
+                                        <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> 38 u (Basal 18 / Bolus 20)</p>
+                                        <p><span className="font-bold text-amber-300">Events (7d):</span> Lows: 2 · Highs: 6</p>
+                                        <p><span className="font-bold text-rose-300">Corrections (7d):</span> Avg 3.1 u · Max 10 u</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
