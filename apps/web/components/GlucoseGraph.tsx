@@ -72,7 +72,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                             </button>
                             {showMetrics && (
                                 <div
-                                    className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 top-[calc(100%+8px)] z-20 w-72 max-w-[90vw] max-h-72 overflow-y-auto rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/50"
+                                    className="fixed left-4 right-4 top-24 sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:top-[calc(100%+8px)] sm:translate-x-0 z-[9999] w-auto sm:w-72 max-w-[calc(100vw-32px)] sm:max-w-[90vw] max-h-80 overflow-y-auto rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/50"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <div className="flex items-start justify-between sticky top-0 bg-slate-950/95 pb-2">
