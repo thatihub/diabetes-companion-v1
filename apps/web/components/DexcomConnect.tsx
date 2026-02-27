@@ -28,6 +28,8 @@ export default function DexcomConnect() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<string | null>(null);
     const [lastSync, setLastSync] = useState<string | null>(null);
+    const [health, setHealth] = useState<"healthy" | "degraded" | "error">("healthy");
+    const [toast, setToast] = useState<string | null>(null);
     const mode = useSyncExternalStore(subscribeDataMode, readDataMode, () => "real");
     const isDemoMode = mode === "demo";
     const isSyncing = status === "syncing";
@@ -52,10 +54,18 @@ export default function DexcomConnect() {
     useEffect(() => {
         const fetchStatus = async () => {
             try {
-                const res = await api.get<{ last_sync?: string; last_sync_stats?: { count?: number; latest?: string; }; }>("https://diabetes-companion-api.onrender.com/api/dexcom/status");
+                const res = await api.get<{ last_sync?: string; last_sync_stats?: { count?: number; latest?: string; carb_gap_hours?: number; }; }>("https://diabetes-companion-api.onrender.com/api/dexcom/status");
                 setLastSync(res.last_sync || null);
+                if (res.last_sync_stats?.carb_gap_hours !== undefined && res.last_sync_stats.carb_gap_hours !== null && res.last_sync_stats.carb_gap_hours > 24) {
+                    setHealth("degraded");
+                } else {
+                    setHealth("healthy");
+                }
             } catch {
                 setLastSync(null);
+                setHealth("error");
+                setToast("Dexcom status unavailable. Check connection.");
+                setTimeout(() => setToast(null), 4500);
             }
         };
         fetchStatus();
@@ -95,8 +105,8 @@ export default function DexcomConnect() {
                                 />
                                 <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
                             </span>
-                            <p className={`text-[10px] font-bold uppercase tracking-widest ${isDemoMode ? "text-amber-300" : "text-slate-500"}`}>
-                                {isDemoMode ? "Demo Connection" : "Live Connection"}
+                            <p className={`text-[10px] font-bold uppercase tracking-widest ${isDemoMode ? "text-amber-300" : health === "degraded" ? "text-amber-300" : health === "error" ? "text-rose-400" : "text-slate-500"}`}>
+                                {isDemoMode ? "Demo Connection" : health === "degraded" ? "Live (Degraded)" : health === "error" ? "Live (Error)" : "Live Connection"}
                             </p>
                         </div>
                     </div>
@@ -132,12 +142,16 @@ export default function DexcomConnect() {
                         )}
                     </span>
                 </button>
-            </div>
+        </div>
 
             <div
                 className={`mt-6 flex items-center gap-3 rounded-2xl border p-4 transition-all ${isSyncing
                     ? "animate-in fade-in slide-in-from-top-1 border-emerald-500/20 bg-emerald-500/5"
-                    : "border-slate-700/40 bg-slate-800/20"
+                    : health === "degraded"
+                        ? "border-amber-400/30 bg-amber-400/10"
+                        : health === "error"
+                            ? "border-rose-400/40 bg-rose-500/10"
+                            : "border-slate-700/40 bg-slate-800/20"
                     }`}
             >
                 <span
@@ -145,15 +159,27 @@ export default function DexcomConnect() {
                         ? "border-emerald-300/50 bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.9)]"
                         : isDemoMode
                             ? "border-amber-300/50 bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.6)]"
-                        : "border-slate-400/40 bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.45)]"
+                        : health === "degraded"
+                            ? "border-amber-300/60 bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.6)]"
+                            : health === "error"
+                                ? "border-rose-300/60 bg-rose-400 shadow-[0_0_12px_rgba(248,113,113,0.7)]"
+                                : "border-slate-400/40 bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.45)]"
                         }`}
                 >
                     <span className={`absolute inset-0 rounded-full ${isSyncing ? "animate-ping bg-emerald-300/60" : isDemoMode ? "bg-amber-200/35" : "animate-pulse bg-slate-300/25"}`} />
                     <span className="absolute left-[2px] top-[2px] h-1.5 w-1.5 rounded-full bg-white/80" />
                 </span>
                 <div className="flex flex-col gap-1">
-                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : isDemoMode ? "text-amber-300" : "text-slate-400"}`}>
-                        {isSyncing ? "Protocol Initiated — Data Stream Updating" : isDemoMode ? "Demo mode — Live sync is disabled" : "Ready — Sync is on standby"}
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isSyncing ? "text-emerald-300" : isDemoMode ? "text-amber-300" : health === "degraded" ? "text-amber-200" : health === "error" ? "text-rose-300" : "text-slate-400"}`}>
+                        {isSyncing
+                            ? "Protocol Initiated — Data Stream Updating"
+                            : isDemoMode
+                                ? "Demo mode — Live sync is disabled"
+                                : health === "degraded"
+                                    ? "Degraded — No carbs seen >24h"
+                                    : health === "error"
+                                        ? "Connection issue — Tap sync or re-auth"
+                                        : "Ready — Sync is on standby"}
                     </p>
                     {lastSync && (
                         <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
@@ -163,5 +189,10 @@ export default function DexcomConnect() {
                 </div>
             </div>
         </div>
+            {toast && (
+                <div className="fixed bottom-4 right-4 z-[9999] max-w-xs rounded-2xl border border-rose-400/50 bg-rose-500/20 px-4 py-3 text-[12px] font-semibold text-rose-50 shadow-xl">
+                    {toast}
+                </div>
+            )}
     );
 }
