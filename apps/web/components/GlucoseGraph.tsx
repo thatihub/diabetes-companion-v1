@@ -53,7 +53,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                         )}
                     </div>
                     {summary && (
-                        <div className="flex items-center gap-4 bg-slate-800/20 px-6 py-3 rounded-[24px] border border-slate-700/30 relative">
+                        <div className="flex items-center gap-3 sm:gap-4 bg-slate-800/20 px-4 sm:px-6 py-3 rounded-[24px] border border-slate-700/30 relative">
                             <div className="text-right">
                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Carbs / Day</span>
                                 <span className="text-sm font-black text-teal-400">{summary.carbs}g</span>
@@ -66,7 +66,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setShowMetrics((v) => !v); }}
-                                className="ml-2 rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95"
+                                className="ml-1 sm:ml-2 rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95 min-w-[84px] text-center"
                             >
                                 Metrics
                             </button>
