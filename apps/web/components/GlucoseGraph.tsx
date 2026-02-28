@@ -41,16 +41,25 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
         <div className={cardClass}>
             {/* Header Area */}
             {(title || summary) && (
-                <div className={`flex items-end justify-between gap-4 ${minimal ? 'mb-8' : 'mb-10'}`}>
-                    <div className="flex-1">
-                        {title && (
-                            <h3 className="text-slate-100 text-xl font-black tracking-tighter">{title.split(' (')[0]}</h3>
-                        )}
-                        {title?.includes('(') && (
-                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">
-                                {title.split(' (')[1].replace(')', '')}
-                            </p>
-                        )}
+                <div className={`flex flex-col gap-3 ${minimal ? 'mb-8' : 'mb-10'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            {title && (
+                                <h3 className="text-slate-100 text-xl font-black tracking-tighter">{title.split(' (')[0]}</h3>
+                            )}
+                            {title?.includes('(') && (
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">
+                                    {title.split(' (')[1].replace(')', '')}
+                                </p>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setShowMetrics((v) => !v); }}
+                            className="rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95 min-w-[96px] text-center"
+                        >
+                            Metrics
+                        </button>
                     </div>
                     {summary && (
                         <div className="flex flex-wrap items-center gap-3 sm:gap-4 bg-slate-800/20 px-4 sm:px-6 py-3 rounded-[24px] border border-slate-700/30 relative">
@@ -63,13 +72,6 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Avg Insulin / Day</span>
                                 <span className="text-sm font-black text-rose-400">{summary.insulin}u</span>
                             </div>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setShowMetrics((v) => !v); }}
-                                className="ml-1 sm:ml-2 rounded-full border border-slate-700/60 bg-slate-900/80 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-white hover:border-slate-500 transition-all active:scale-95 min-w-[96px] text-center w-full sm:w-auto"
-                            >
-                                Metrics
-                            </button>
                             {showMetrics && (
                                 <div
                                     className="fixed left-4 right-4 top-24 sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:top-[calc(100%+8px)] sm:translate-x-0 z-[9999] w-auto sm:w-72 max-w-[calc(100vw-32px)] sm:max-w-[90vw] max-h-80 overflow-y-auto rounded-2xl border border-slate-700/70 bg-slate-950/95 p-4 shadow-2xl scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/50"
