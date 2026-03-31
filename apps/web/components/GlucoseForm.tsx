@@ -16,6 +16,7 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
         notes: string;
         confidence: "low" | "medium" | "high";
     } | null>(null);
+    const [copiedLabel, setCopiedLabel] = useState<"" | "carbs" | "full">("");
     const carbsInputRef = useRef<HTMLInputElement | null>(null);
     const notesInputRef = useRef<HTMLTextAreaElement | null>(null);
     const mealTagRef = useRef<HTMLSelectElement | null>(null);
@@ -80,6 +81,18 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
             const existing = notesInputRef.current.value.trim();
             const aiNote = `AI meal estimate (approx): Protein ${mealEstimate.totals.protein_g}g, Fat ${mealEstimate.totals.fat_g}g, Confidence ${mealEstimate.confidence}.`;
             notesInputRef.current.value = existing ? `${existing}\n${aiNote}` : aiNote;
+        }
+    };
+
+    const copyText = async (value: string, label: "carbs" | "full") => {
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(value);
+                setCopiedLabel(label);
+                setTimeout(() => setCopiedLabel(""), 1800);
+            }
+        } catch {
+            setEstimateError("Clipboard copy failed. Please copy manually.");
         }
     };
 
@@ -164,13 +177,35 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                                 </div>
                             )}
                             <p className="text-[11px] text-slate-500">Confidence: {mealEstimate.confidence.toUpperCase()}</p>
-                            <button
-                                type="button"
-                                onClick={applyEstimateToForm}
-                                className="rounded-xl border border-teal-400/40 bg-teal-500/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-teal-200 hover:bg-teal-500/30"
-                            >
-                                Apply Estimate To Form
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => copyText(String(Math.round(mealEstimate.totals.carbs_g)), "carbs")}
+                                    className="rounded-xl border border-sky-400/40 bg-sky-500/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-200 hover:bg-sky-500/30"
+                                >
+                                    Copy Carbs
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => copyText(`Carbs ${mealEstimate.totals.carbs_g}g, Protein ${mealEstimate.totals.protein_g}g, Fat ${mealEstimate.totals.fat_g}g`, "full")}
+                                    className="rounded-xl border border-slate-500/40 bg-slate-500/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-200 hover:bg-slate-500/30"
+                                >
+                                    Copy Full Macros
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={applyEstimateToForm}
+                                    className="rounded-xl border border-teal-400/40 bg-teal-500/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-teal-200 hover:bg-teal-500/30"
+                                >
+                                    Apply Estimate To Form
+                                </button>
+                            </div>
+                            {copiedLabel && (
+                                <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-300">
+                                    {copiedLabel === "carbs" ? "Copied carbs for Dexcom" : "Copied full macros"}
+                                </p>
+                            )}
+                            <p className="text-[10px] text-slate-500">Dexcom supports carbs only. Protein/fat are kept in this app.</p>
                         </div>
                     )}
                     {estimateError && (
