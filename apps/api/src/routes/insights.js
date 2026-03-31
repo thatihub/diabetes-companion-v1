@@ -245,3 +245,107 @@ insightsRouter.post("/tts", async (req, res) => {
         return res.status(502).json({ error: `TTS failed: ${err.message}` });
     }
 });
+
+/**
+ * POST /api/insights/meal-estimate
+ * Body: { imageData: "data:image/jpeg;base64,..." }
+ * Returns: { totals: { carbs_g, protein_g, fat_g }, items: [{name, carbs_g, protein_g, fat_g}], notes }
+ */
+insightsRouter.post("/meal-estimate", async (req, res) => {
+    const { imageData } = req.body || {};
+
+    if (!imageData || typeof imageData !== "string" || !imageData.startsWith("data:image/")) {
+        return res.status(400).json({ error: "imageData (data:image/* base64) is required." });
+    }
+
+    if (!OPENAI_API_KEY || OPENAI_API_KEY.length < 10) {
+        return res.status(500).json({ error: "Missing OPENAI_API_KEY." });
+    }
+
+    const systemPrompt = `
+You are a nutrition estimation assistant.
+Given one meal image, estimate approximate macros.
+Return ONLY valid JSON in this exact shape:
+{
+  "totals": { "carbs_g": number, "protein_g": number, "fat_g": number },
+  "items": [{ "name": string, "carbs_g": number, "protein_g": number, "fat_g": number }],
+  "notes": string,
+  "confidence": "low" | "medium" | "high"
+}
+Rules:
+- Numbers must be non-negative.
+- Keep estimates realistic and conservative.
+- If unsure, still provide best estimate and mention uncertainty in notes.
+- Use grams for all macros.
+`.trim();
+
+    try {
+        const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                model: "gpt-4o-mini",
+                response_format: { type: "json_object" },
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: "Estimate carbs, protein, and fat for this meal photo." },
+                            { type: "image_url", image_url: { url: imageData } }
+                        ]
+                    }
+                ],
+                temperature: 0.2,
+                max_tokens: 600
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`
+                },
+                timeout: 60000
+            }
+        );
+
+        const raw = response.data?.choices?.[0]?.message?.content || "{}";
+        let parsed;
+        try {
+            parsed = JSON.parse(raw);
+        } catch {
+            return res.status(502).json({ error: "AI response was not valid JSON." });
+        }
+
+        const totals = parsed?.totals || {};
+        const safeNum = (v) => {
+            const n = Number(v);
+            return Number.isFinite(n) && n >= 0 ? Number(n.toFixed(1)) : 0;
+        };
+
+        const normalizedItems = Array.isArray(parsed?.items)
+            ? parsed.items.map((it) => ({
+                name: String(it?.name || "Unknown item"),
+                carbs_g: safeNum(it?.carbs_g),
+                protein_g: safeNum(it?.protein_g),
+                fat_g: safeNum(it?.fat_g),
+            }))
+            : [];
+
+        const normalized = {
+            totals: {
+                carbs_g: safeNum(totals?.carbs_g),
+                protein_g: safeNum(totals?.protein_g),
+                fat_g: safeNum(totals?.fat_g),
+            },
+            items: normalizedItems,
+            notes: String(parsed?.notes || "AI estimated from meal photo."),
+            confidence: ["low", "medium", "high"].includes(String(parsed?.confidence))
+                ? parsed.confidence
+                : "medium",
+        };
+
+        return res.json(normalized);
+    } catch (err) {
+        console.error("[Meal Estimate] Error:", err.message);
+        return res.status(502).json({ error: `Meal estimate failed: ${err.message}` });
+    }
+});

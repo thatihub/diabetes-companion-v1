@@ -1,12 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "../lib/api";
 
 export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () => void }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
+    const [estimateLoading, setEstimateLoading] = useState(false);
+    const [estimateError, setEstimateError] = useState("");
+    const [mealPhotoPreview, setMealPhotoPreview] = useState<string | null>(null);
+    const [mealEstimate, setMealEstimate] = useState<{
+        totals: { carbs_g: number; protein_g: number; fat_g: number };
+        items: Array<{ name: string; carbs_g: number; protein_g: number; fat_g: number }>;
+        notes: string;
+        confidence: "low" | "medium" | "high";
+    } | null>(null);
+    const carbsInputRef = useRef<HTMLInputElement | null>(null);
+    const notesInputRef = useRef<HTMLTextAreaElement | null>(null);
+    const mealTagRef = useRef<HTMLSelectElement | null>(null);
+
+    const fileToDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Failed to read image"));
+        reader.readAsDataURL(file);
+    });
+
+    const compressImage = async (file: File): Promise<string> => {
+        const rawDataUrl = await fileToDataUrl(file);
+        const img = document.createElement("img");
+        await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error("Failed to load image"));
+            img.src = rawDataUrl;
+        });
+
+        const maxWidth = 1280;
+        const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+        const width = Math.round(img.width * scale);
+        const height = Math.round(img.height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return rawDataUrl;
+        ctx.drawImage(img, 0, 0, width, height);
+        return canvas.toDataURL("image/jpeg", 0.78);
+    };
+
+    const handleEstimateFromPhoto = async (file: File) => {
+        setEstimateError("");
+        setMealEstimate(null);
+        setEstimateLoading(true);
+        try {
+            const imageData = await compressImage(file);
+            setMealPhotoPreview(imageData);
+            const result = await api.post<{
+                totals: { carbs_g: number; protein_g: number; fat_g: number };
+                items: Array<{ name: string; carbs_g: number; protein_g: number; fat_g: number }>;
+                notes: string;
+                confidence: "low" | "medium" | "high";
+            }>("/api/insights/meal-estimate", { imageData });
+            setMealEstimate(result);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown estimation error";
+            setEstimateError(`AI estimate failed: ${message}`);
+        } finally {
+            setEstimateLoading(false);
+        }
+    };
+
+    const applyEstimateToForm = () => {
+        if (!mealEstimate) return;
+        if (carbsInputRef.current) carbsInputRef.current.value = String(Math.round(mealEstimate.totals.carbs_g));
+        if (mealTagRef.current && mealTagRef.current.value === "fasting") mealTagRef.current.value = "post_meal";
+        if (notesInputRef.current) {
+            const existing = notesInputRef.current.value.trim();
+            const aiNote = `AI meal estimate (approx): Protein ${mealEstimate.totals.protein_g}g, Fat ${mealEstimate.totals.fat_g}g, Confidence ${mealEstimate.confidence}.`;
+            notesInputRef.current.value = existing ? `${existing}\n${aiNote}` : aiNote;
+        }
+    };
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -52,6 +127,56 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
             <h2 className="text-xl font-bold text-slate-100 mb-6 tracking-tight">Manual Entry</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-3 rounded-2xl border border-slate-700/50 bg-slate-900/30 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.18em]">AI Meal Camera Estimate</p>
+                        <label className="cursor-pointer rounded-xl border border-slate-600 bg-slate-900/70 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-200 hover:border-sky-400 hover:text-white transition-colors">
+                            {estimateLoading ? "Estimating..." : "Take Photo"}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                disabled={estimateLoading}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void handleEstimateFromPhoto(file);
+                                    e.currentTarget.value = "";
+                                }}
+                            />
+                        </label>
+                    </div>
+                    {mealPhotoPreview && (
+                        <img src={mealPhotoPreview} alt="Meal preview" className="h-36 w-full rounded-xl object-cover border border-slate-700/60" />
+                    )}
+                    {mealEstimate && (
+                        <div className="space-y-3 rounded-xl border border-slate-700/50 bg-slate-950/60 p-3">
+                            <p className="text-xs font-bold text-slate-200">
+                                Carbs {mealEstimate.totals.carbs_g}g · Protein {mealEstimate.totals.protein_g}g · Fat {mealEstimate.totals.fat_g}g
+                            </p>
+                            {mealEstimate.items?.length > 0 && (
+                                <div className="space-y-1">
+                                    {mealEstimate.items.slice(0, 4).map((item, idx) => (
+                                        <p key={`${item.name}-${idx}`} className="text-[11px] text-slate-400">
+                                            {item.name}: {item.carbs_g}C / {item.protein_g}P / {item.fat_g}F
+                                        </p>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="text-[11px] text-slate-500">Confidence: {mealEstimate.confidence.toUpperCase()}</p>
+                            <button
+                                type="button"
+                                onClick={applyEstimateToForm}
+                                className="rounded-xl border border-teal-400/40 bg-teal-500/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-teal-200 hover:bg-teal-500/30"
+                            >
+                                Apply Estimate To Form
+                            </button>
+                        </div>
+                    )}
+                    {estimateError && (
+                        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-rose-400">{estimateError}</p>
+                    )}
+                </div>
 
                 {/* Glucose Input */}
                 <div className="space-y-2">
@@ -74,6 +199,7 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                     <div className="relative">
                         <select
                             name="meal_tag"
+                            ref={mealTagRef}
                             className="w-full bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-sm font-bold text-slate-300 focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none appearance-none cursor-pointer"
                             defaultValue="fasting"
                         >
@@ -98,6 +224,7 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                         <div className="relative">
                             <input
                                 name="carbs"
+                                ref={carbsInputRef}
                                 type="number"
                                 placeholder="0"
                                 className="w-full bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-sm font-black text-teal-400 placeholder-slate-800 focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none"
@@ -127,6 +254,7 @@ export default function GlucoseForm({ onReadingSaved }: { onReadingSaved?: () =>
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Notes</label>
                     <textarea
                         name="notes"
+                        ref={notesInputRef}
                         rows={2}
                         placeholder="Add a quick note..."
                         className="w-full bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-sm font-medium text-slate-300 placeholder-slate-800 focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none resize-none"

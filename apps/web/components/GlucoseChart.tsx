@@ -73,6 +73,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             tir: Math.round((inRange / n) * 100),
             mean: Math.round(mean),
             gmi: (mean * 0.0235 + 2.6).toFixed(1),
+            sd: Math.round(sd),
             cv: Math.round(cv),
             carbsPerDay: Math.round(carbsPerDay),
             insulinPerDay: Math.round(insulinPerDay),
@@ -85,7 +86,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
 
     const metricsSpeech = useMemo(() => {
         if (!metrics) return "";
-        return `Time in range ${metrics.tir} percent for ${range}. Average glucose ${metrics.mean} milligrams per deciliter. G M I ${metrics.gmi} percent. Variability ${metrics.cv} percent. Average carbs per day ${metrics.carbsPerDay} grams. Average insulin per day ${metrics.insulinPerDay} units. Lows ${metrics.lows}, highs ${metrics.highs}. Corrections average ${metrics.correctionAvg} units, maximum ${metrics.correctionMax} units.`;
+        return `Time in range ${metrics.tir} percent for ${range}. Average glucose ${metrics.mean} milligrams per deciliter. G M I ${metrics.gmi} percent. Standard deviation ${metrics.sd} milligrams per deciliter. Variability ${metrics.cv} percent. Average carbs per day ${metrics.carbsPerDay} grams. Average insulin per day ${metrics.insulinPerDay} units. Lows ${metrics.lows}, highs ${metrics.highs}. Corrections average ${metrics.correctionAvg} units, maximum ${metrics.correctionMax} units.`;
     }, [metrics, range]);
 
     useEffect(() => {
@@ -95,7 +96,6 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
             try {
                 const hours = getHours(range);
                 const points = await api.get<GlucosePoint[]>(`/api/glucose?hours=${hours}&limit=10000`);
-                const mode = typeof window !== "undefined" ? window.localStorage.getItem("data_mode") : "real";
 
                 const sorted = points
                     .filter(p => p.measured_at && !isNaN(new Date(p.measured_at).getTime()))
@@ -188,6 +188,7 @@ export default function GlucoseChart({ refreshTrigger, initialRange = "24h" }: {
                                     <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-200">
                                         <p><span className="font-bold text-teal-300">Time in Range:</span> {metrics.tir}% ({range})</p>
                                         <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> {metrics.mean} mg/dL · {metrics.gmi}%</p>
+                                        <p><span className="font-bold text-slate-200">Std Dev (SD):</span> {metrics.sd} mg/dL</p>
                                         <p><span className="font-bold text-slate-200">Variability (%CV):</span> {metrics.cv}%</p>
                                         <p><span className="font-bold text-teal-300">Avg Carbs / Day:</span> {metrics.carbsPerDay} g</p>
                                         <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> {metrics.insulinPerDay} u</p>

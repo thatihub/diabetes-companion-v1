@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Area, Bar, ComposedChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceArea } from "recharts";
 import SpeakButton from "./SpeakButton";
 
@@ -36,6 +36,43 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
     const cardClass = minimal
         ? "w-full overflow-visible"
         : "wellness-card mx-6 p-8 mb-10 overflow-visible relative";
+
+    const metrics = useMemo(() => {
+        const glucoseValues = data.map((d) => d.glucose_mgdl).filter((v) => Number.isFinite(v));
+        if (glucoseValues.length === 0) return null;
+
+        const n = glucoseValues.length;
+        const mean = glucoseValues.reduce((a, b) => a + b, 0) / n;
+        const variance = glucoseValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+        const sd = Math.sqrt(variance);
+        const cv = mean > 0 ? (sd / mean) * 100 : 0;
+        const tir = Math.round((glucoseValues.filter((v) => v >= 70 && v <= 180).length / n) * 100);
+        const lows = glucoseValues.filter((v) => v < 70).length;
+        const highs = glucoseValues.filter((v) => v > 250).length;
+
+        const insulinValues = data.map((d) => Number(d.insulin_units) || 0).filter((v) => v > 0);
+        const correctionAvg = insulinValues.length
+            ? insulinValues.reduce((a, b) => a + b, 0) / insulinValues.length
+            : 0;
+        const correctionMax = insulinValues.length ? Math.max(...insulinValues) : 0;
+
+        return {
+            tir,
+            mean: Math.round(mean),
+            gmi: (mean * 0.0235 + 2.6).toFixed(1),
+            sd: Math.round(sd),
+            cv: Math.round(cv),
+            lows,
+            highs,
+            correctionAvg: correctionAvg.toFixed(1),
+            correctionMax: correctionMax.toFixed(0),
+        };
+    }, [data]);
+
+    const metricsSpeech = useMemo(() => {
+        if (!metrics) return "";
+        return `Time in range ${metrics.tir} percent. Average glucose ${metrics.mean} milligrams per deciliter. G M I ${metrics.gmi} percent. Standard deviation ${metrics.sd} milligrams per deciliter. Variability ${metrics.cv} percent. Average carbs per day ${summary?.carbs ?? 0} grams. Average insulin per day ${summary?.insulin ?? 0} units. Lows ${metrics.lows}, highs ${metrics.highs}. Corrections average ${metrics.correctionAvg} units, maximum ${metrics.correctionMax} units.`;
+    }, [metrics, summary?.carbs, summary?.insulin]);
 
     return (
         <div className={cardClass}>
@@ -81,7 +118,7 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Range Snapshot</p>
                                         <div className="flex items-center gap-2">
                                             <SpeakButton
-                                                text="Time in range 74 percent. Average glucose 142 milligrams per deciliter. G M I 6.7 percent. Variability 31 percent. Average carbs per day 210 grams. Average insulin per day 38 units, basal 18, bolus 20. Events: lows 2, highs 6. Corrections: average 3.1 units, max 10 units."
+                                                text={metricsSpeech}
                                             />
                                             <button
                                                 type="button"
@@ -93,13 +130,14 @@ export default function GlucoseGraph({ data, height = 200, title, summary, minim
                                         </div>
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm text-slate-200 pr-1">
-                                        <p><span className="font-bold text-teal-300">Time in Range:</span> 74% (7d)</p>
-                                        <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> 142 mg/dL · 6.7%</p>
-                                        <p><span className="font-bold text-slate-200">Variability (%CV):</span> 31%</p>
-                                        <p><span className="font-bold text-teal-300">Avg Carbs / Day:</span> 210 g</p>
-                                        <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> 38 u (Basal 18 / Bolus 20)</p>
-                                        <p><span className="font-bold text-amber-300">Events (7d):</span> Lows: 2 · Highs: 6</p>
-                                        <p><span className="font-bold text-rose-300">Corrections (7d):</span> Avg 3.1 u · Max 10 u</p>
+                                        <p><span className="font-bold text-teal-300">Time in Range:</span> {metrics ? metrics.tir : "--"}%</p>
+                                        <p><span className="font-bold text-slate-200">Avg Glucose / GMI:</span> {metrics ? metrics.mean : "--"} mg/dL · {metrics ? metrics.gmi : "--"}%</p>
+                                        <p><span className="font-bold text-slate-200">Std Dev (SD):</span> {metrics ? metrics.sd : "--"} mg/dL</p>
+                                        <p><span className="font-bold text-slate-200">Variability (%CV):</span> {metrics ? metrics.cv : "--"}%</p>
+                                        <p><span className="font-bold text-teal-300">Avg Carbs / Day:</span> {summary?.carbs ?? "--"} g</p>
+                                        <p><span className="font-bold text-rose-300">Avg Insulin / Day:</span> {summary?.insulin ?? "--"} u</p>
+                                        <p><span className="font-bold text-amber-300">Events:</span> Lows: {metrics ? metrics.lows : "--"} · Highs: {metrics ? metrics.highs : "--"}</p>
+                                        <p><span className="font-bold text-rose-300">Corrections:</span> Avg {metrics ? metrics.correctionAvg : "--"} u · Max {metrics ? metrics.correctionMax : "--"} u</p>
                                     </div>
                                 </div>
                             )}

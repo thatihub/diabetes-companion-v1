@@ -33,7 +33,7 @@ export default function TrendsSplitView() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
-    const [stats, setStats] = useState({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
+    const [stats, setStats] = useState({ avg: 0, gmi: 0, sd: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<WeekData | null>(null);
@@ -106,7 +106,6 @@ export default function TrendsSplitView() {
                 const totalHours = getHours(range);
                 // Fetch plenty of data
                 const rawPoints = await api.get<GlucosePoint[]>(`/api/glucose?hours=${totalHours}&limit=20000`);
-                const mode = typeof window !== "undefined" ? window.localStorage.getItem("data_mode") : "real";
 
                 // Inferred carbs from insulin if carbs are missing (for demo/personal evaluation)
                 const hasCarbs = rawPoints.some(p => (Number(p.carbs_grams) || 0) > 0);
@@ -143,6 +142,7 @@ export default function TrendsSplitView() {
                     setStats({
                         avg: Math.round(avg),
                         gmi: Number(gmi.toFixed(1)),
+                        sd: Math.round(sd),
                         cv: Math.round(cv),
                         tir,
                         lows,
@@ -151,7 +151,7 @@ export default function TrendsSplitView() {
                         totalInsulin: Number(avgDailyInsulin.toFixed(1))
                     });
                 } else {
-                    setStats({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
+                    setStats({ avg: 0, gmi: 0, sd: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
                 }
 
                 // Optimized Processing: One-pass grouping (O(N))
@@ -224,7 +224,7 @@ export default function TrendsSplitView() {
                 console.error("Failed to load trends data", err);
                 setError(err instanceof Error ? err.message : 'Failed to load data');
                 setWeeklyData([]);
-                setStats({ avg: 0, gmi: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
+                setStats({ avg: 0, gmi: 0, sd: 0, cv: 0, tir: 0, lows: 0, highs: 0, totalCarbs: 0, totalInsulin: 0 });
             } finally {
                 setLoading(false);
             }
@@ -309,8 +309,9 @@ export default function TrendsSplitView() {
                     <p className="text-[11px] font-bold text-slate-500 mt-1">Lows: {stats.lows} · Highs: {stats.highs}</p>
                 </div>
                 <div className="wellness-card p-5">
-                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Variability (%CV)</h3>
+                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Variability / SD</h3>
                     <p className="text-2xl font-black text-amber-300">{stats.cv}%</p>
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">SD {stats.sd} mg/dL</p>
                 </div>
                 <div className="wellness-card p-5">
                     <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Daily Carbs / Insulin</h3>

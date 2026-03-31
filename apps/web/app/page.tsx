@@ -5,6 +5,7 @@ import GlucoseHistory from "../components/GlucoseHistory";
 import GlucoseChart from "../components/GlucoseChart";
 import InsightCard from "../components/InsightCard";
 import DexcomConnect from "../components/DexcomConnect";
+import GlucoseForm from "../components/GlucoseForm";
 import { GlucoseHero } from "../components/GlucoseHero";
 import { useState, Suspense, useEffect } from "react";
 import { api } from "../lib/api";
@@ -12,7 +13,7 @@ import { api } from "../lib/api";
 type LatestGlucose = { glucose_mgdl: number };
 
 export default function Home() {
-  const [refreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [latestValue, setLatestValue] = useState<number | null>(null);
 
   useEffect(() => {
@@ -62,6 +63,12 @@ export default function Home() {
           </div>
 
           <InsightCard />
+
+          <GlucoseForm
+            onReadingSaved={() => {
+              setRefreshKey((prev) => prev + 1);
+            }}
+          />
         </aside>
       </div>
 
